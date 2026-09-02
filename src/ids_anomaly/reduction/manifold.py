@@ -15,12 +15,22 @@ def fit_umap(
     n_neighbors: int = 15,
     min_dist: float = 0.1,
     random_state: int = 42,
+    init: str = "spectral",
 ) -> tuple[UMAP, np.ndarray]:
+    """``init="spectral"`` (UMAP's own default) gives the best embedding but depends on scipy's
+    ARPACK eigensolver, which routinely fails to converge on a k-NN graph built with a small
+    ``n_neighbors`` and silently falls back to LOBPCG, an order of magnitude slower. HPO sweeps
+    a wide ``n_neighbors`` range specifically to find that failure edge, so every low-n_neighbors
+    trial pays the slow-fallback cost. Pass ``init="random"`` from the HPO objective (never from
+    the final best-params fit, where embedding quality matters and it is only fit once) to skip
+    spectral initialization entirely during the sweep.
+    """
     reducer = UMAP(
         n_components=n_components,
         n_neighbors=n_neighbors,
         min_dist=min_dist,
         random_state=random_state,
+        init=init,
         n_jobs=1,  # deterministic given random_state; UMAP disables parallelism otherwise
     )
     embedding = reducer.fit_transform(X)

@@ -134,13 +134,22 @@ def objective_hdbscan(
 def objective_umap(
     trial: optuna.Trial, X: np.ndarray, attack_category_val: np.ndarray
 ) -> float:
-    """Score a UMAP embedding by how well a fixed downstream GMM recovers attack categories --
+    """Score a UMAP embedding by how well a fixed downstream GMM recovers attack categories,
     a proxy for "does this embedding preserve the structure that matters," not just local
     neighborhood fidelity.
+
+    Uses ``init="random"`` rather than UMAP's default spectral initialization: a wide
+    ``n_neighbors`` sweep routinely produces disconnected k-NN graphs at the low end, which makes
+    scipy's ARPACK fail and silently fall back to the much slower LOBPCG solver on nearly every
+    trial. Skipping spectral init keeps every trial's cost comparable and the sweep fast; the
+    final fit with the winning hyperparameters (in pipeline.py) uses the default spectral init,
+    since embedding quality matters there and it only runs once.
     """
     n_neighbors = trial.suggest_int("n_neighbors", 5, 50, log=True)
     min_dist = trial.suggest_float("min_dist", 0.0, 0.5)
-    _, embedding = fit_umap(X, n_components=3, n_neighbors=n_neighbors, min_dist=min_dist)
+    _, embedding = fit_umap(
+        X, n_components=3, n_neighbors=n_neighbors, min_dist=min_dist, init="random"
+    )
     gmm = GaussianMixture(n_components=5, random_state=42)
     labels = gmm.fit_predict(embedding)
     return float(normalized_mutual_info_score(attack_category_val, labels))
