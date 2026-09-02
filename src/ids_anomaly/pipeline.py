@@ -131,8 +131,18 @@ def run_full_pipeline(
 
     logger.info("UMAP HPO (%d trials)...", n_hpo_trials)
     _t0 = time.perf_counter()
+    # HPO only needs to rank hyperparameter configs against each other, not deliver a final
+    # embedding, so score it on a bounded subsample rather than the full ~107k-row fit_ds. UMAP's
+    # per-fit cost is well above linear in n once neighbor search and epoch-count scaling are
+    # accounted for, and thread-based Optuna parallelism (n_jobs > 1) gives poor real speedup for
+    # its numba-jitted internals (measured ~1.3x, not the ~14x the core count would suggest), so
+    # the row count is what actually has to shrink for this stage to finish in a reasonable time.
+    umap_hpo_size = min(20_000, fit_ds.X.shape[0])
+    _hpo_idx = np.random.default_rng(RANDOM_STATE).choice(
+        fit_ds.X.shape[0], size=umap_hpo_size, replace=False
+    )
     umap_study = run_study(
-        lambda trial: objective_umap(trial, fit_ds.X, fit_ds.attack_category),
+        lambda trial: objective_umap(trial, fit_ds.X[_hpo_idx], fit_ds.attack_category[_hpo_idx]),
         n_trials=n_hpo_trials,
         n_jobs=hpo_n_jobs,
     )
