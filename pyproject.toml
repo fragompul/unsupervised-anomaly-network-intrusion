@@ -47,4 +47,4 @@ ignore = ["E501", "N803", "N806"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "dashboard"]

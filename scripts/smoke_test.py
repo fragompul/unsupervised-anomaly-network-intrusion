@@ -12,9 +12,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import numpy as np
 
-from ids_anomaly.anomaly.deep_svdd import DeepSVDDConfig, anomaly_score as svdd_score, train_deep_svdd
-from ids_anomaly.anomaly.isolation_forest import anomaly_score as if_score, fit_isolation_forest
-from ids_anomaly.anomaly.one_class_svm import anomaly_score as ocsvm_score, fit_one_class_svm
+from ids_anomaly.anomaly.deep_svdd import DeepSVDDConfig, train_deep_svdd
+from ids_anomaly.anomaly.deep_svdd import anomaly_score as svdd_score
+from ids_anomaly.anomaly.isolation_forest import anomaly_score as if_score
+from ids_anomaly.anomaly.isolation_forest import fit_isolation_forest
+from ids_anomaly.anomaly.one_class_svm import anomaly_score as ocsvm_score
+from ids_anomaly.anomaly.one_class_svm import fit_one_class_svm
 from ids_anomaly.clustering.density import fit_hdbscan
 from ids_anomaly.clustering.kmeans_gmm import fit_gmm, fit_kmeans, gmm_anomaly_score
 from ids_anomaly.data.download import download_raw
