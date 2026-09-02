@@ -14,6 +14,9 @@ def main() -> None:
     parser.add_argument("command", choices=["run"], help="Pipeline command to execute.")
     parser.add_argument("--trials", type=int, default=25, help="Optuna trials per HPO study.")
     parser.add_argument(
+        "--jobs", type=int, default=None, help="Concurrent Optuna trials (default: cpu_count - 2)."
+    )
+    parser.add_argument(
         "--root", type=Path, default=Path(__file__).resolve().parents[2], help="Project root."
     )
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -27,7 +30,7 @@ def main() -> None:
     logging.getLogger("ids_anomaly").setLevel(logging.INFO)
 
     if args.command == "run":
-        run_full_pipeline(args.root, n_hpo_trials=args.trials)
+        run_full_pipeline(args.root, n_hpo_trials=args.trials, hpo_n_jobs=args.jobs)
 
 
 if __name__ == "__main__":

@@ -27,6 +27,12 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.5",
 ]
+notebooks = [
+    "jupyter>=1.0",
+    "nbconvert>=7.16",
+    "matplotlib>=3.9",
+    "seaborn>=0.13",
+]
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -39,6 +45,9 @@ where = ["src"]
 line-length = 100
 target-version = "py310"
 src = ["src", "tests", "dashboard", "scripts"]
+# Notebooks legitimately need `sys.path.insert` before local imports (E402) -- exploration-only,
+# not part of the linted/tested package surface.
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "N"]

@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -74,6 +76,7 @@ def run_full_pipeline(
     n_hpo_trials: int = 25,
     umap_components: int = 3,
     tsne_sample_size: int = 6000,
+    hpo_n_jobs: int | None = None,
 ) -> dict[str, Any]:
     from ids_anomaly.hpo.optuna_runner import (
         objective_autoencoder,
@@ -85,6 +88,14 @@ def run_full_pipeline(
         objective_umap,
         run_study,
     )
+
+    # Every objective's inner work is native code that releases the GIL (BLAS, numba, PyTorch),
+    # so threaded Optuna trials give real wall-clock speedup on a multi-core box. Leave a couple
+    # of cores free for the OS rather than claiming every logical processor.
+    if hpo_n_jobs is None:
+        hpo_n_jobs = max(1, (os.cpu_count() or 4) - 2)
+    logger.info("HPO parallelism: %d concurrent trials", hpo_n_jobs)
+    timing: dict[str, float] = {}
 
     results_dir = root_dir / "results"
     models_dir = results_dir / "models"
@@ -119,10 +130,13 @@ def run_full_pipeline(
     all_metrics["pca"] = {"cumulative_explained_variance": explained.tolist()}
 
     logger.info("UMAP HPO (%d trials)...", n_hpo_trials)
+    _t0 = time.perf_counter()
     umap_study = run_study(
         lambda trial: objective_umap(trial, fit_ds.X, fit_ds.attack_category),
         n_trials=n_hpo_trials,
+        n_jobs=hpo_n_jobs,
     )
+    timing["umap_hpo"] = time.perf_counter() - _t0
     umap_model, _ = manifold.fit_umap(fit_ds.X, n_components=umap_components, **umap_study.best_params)
     umap_test_embedding = umap_model.transform(test_ds.X)
     all_metrics["umap"] = {"best_params": umap_study.best_params, "val_nmi": umap_study.best_value}
@@ -134,10 +148,13 @@ def run_full_pipeline(
     tsne_embedding = manifold.fit_tsne(test_ds.X[tsne_idx], n_components=umap_components)
 
     logger.info("Autoencoder HPO (%d trials)...", n_hpo_trials)
+    _t0 = time.perf_counter()
     ae_study = run_study(
         lambda trial: objective_autoencoder(trial, train_normal.X, val_ds.X, val_ds.is_attack),
         n_trials=n_hpo_trials,
+        n_jobs=hpo_n_jobs,
     )
+    timing["autoencoder_hpo"] = time.perf_counter() - _t0
     ae_hidden = (ae_study.best_params["hidden0"], ae_study.best_params["hidden1"])
     ae_config = TrainConfig(
         latent_dim=ae_study.best_params["latent_dim"],
@@ -168,6 +185,7 @@ def run_full_pipeline(
     }
 
     # -------------------------------------------------------------------------------- clustering
+    _t0 = time.perf_counter()
     clustering_results: dict[str, Any] = {}
     for embed_name, embed_test in embeddings_test.items():
         embed_train = {"pca": pca_model.transform(fit_ds.X), "umap": umap_model.transform(fit_ds.X),
@@ -177,6 +195,7 @@ def run_full_pipeline(
         km_study = run_study(
             lambda trial, e=embed_train: objective_kmeans(trial, e, fit_ds.attack_category),
             n_trials=n_hpo_trials,
+            n_jobs=hpo_n_jobs,
         )
         _, km_test_labels = kmeans_gmm.fit_kmeans(embed_test, n_clusters=km_study.best_params["n_clusters"])
 
@@ -184,6 +203,7 @@ def run_full_pipeline(
         gmm_study = run_study(
             lambda trial, e=embed_train: objective_gmm(trial, e, fit_ds.attack_category),
             n_trials=n_hpo_trials,
+            n_jobs=hpo_n_jobs,
         )
         gmm_model, gmm_test_labels = kmeans_gmm.fit_gmm(
             embed_test, n_components=gmm_study.best_params["n_components"],
@@ -194,6 +214,7 @@ def run_full_pipeline(
         hdb_study = run_study(
             lambda trial, e=embed_train: objective_hdbscan(trial, e, fit_ds.attack_category),
             n_trials=max(10, n_hpo_trials // 2),
+            n_jobs=hpo_n_jobs,
         )
         _, hdb_test_labels = density.fit_hdbscan(embed_test, min_cluster_size=hdb_study.best_params["min_cluster_size"])
 
@@ -208,28 +229,37 @@ def run_full_pipeline(
                         **clustering_metrics(embed_test, hdb_test_labels, test_ds.attack_category)},
         }
     all_metrics["clustering"] = clustering_results
+    timing["clustering_hpo_all_embeddings"] = time.perf_counter() - _t0
 
     # --------------------------------------------------------------------------- anomaly detection
     logger.info("Isolation Forest HPO (fully unsupervised)...")
+    _t0 = time.perf_counter()
     if_study = run_study(
         lambda trial: objective_isolation_forest(trial, fit_ds.X, val_ds.X, val_ds.is_attack),
         n_trials=n_hpo_trials,
+        n_jobs=hpo_n_jobs,
     )
+    timing["isolation_forest_hpo"] = time.perf_counter() - _t0
     if_model = if_module.fit_isolation_forest(fit_ds.X, **if_study.best_params)
     if_test_scores = if_module.anomaly_score(if_model, test_ds.X)
     joblib.dump(if_model, models_dir / "isolation_forest.joblib")
 
     logger.info("One-Class SVM HPO (semi-supervised, normal-only)...")
+    _t0 = time.perf_counter()
     ocsvm_study = run_study(
         lambda trial: objective_one_class_svm(trial, train_normal.X, val_ds.X, val_ds.is_attack),
         n_trials=n_hpo_trials,
+        n_jobs=hpo_n_jobs,
     )
+    timing["one_class_svm_hpo"] = time.perf_counter() - _t0
     ocsvm_model = ocsvm_module.fit_one_class_svm(train_normal.X, **ocsvm_study.best_params)
     ocsvm_test_scores = ocsvm_module.anomaly_score(ocsvm_model, test_ds.X)
     joblib.dump(ocsvm_model, models_dir / "one_class_svm.joblib")
 
     logger.info("Deep SVDD (semi-supervised, normal-only)...")
+    _t0 = time.perf_counter()
     svdd_result = train_deep_svdd(train_normal.X, DeepSVDDConfig())
+    timing["deep_svdd_train"] = time.perf_counter() - _t0
     svdd_test_scores = svdd_score(svdd_result, test_ds.X)
 
     anomaly_results = {
@@ -261,6 +291,8 @@ def run_full_pipeline(
         for name, scores in score_map.items()
     }
     all_metrics["per_category_detection_rate"] = per_category
+    all_metrics["timing_seconds"] = timing
+    all_metrics["hpo_n_jobs"] = hpo_n_jobs
 
     # ------------------------------------------------------------------------------------ persist
     np.savez_compressed(

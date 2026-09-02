@@ -12,13 +12,14 @@ def fit_isolation_forest(
     contamination: float | str = "auto",
     max_samples: int | float | str = "auto",
     random_state: int = 42,
+    n_jobs: int = -1,
 ) -> IsolationForest:
     model = IsolationForest(
         n_estimators=n_estimators,
         contamination=contamination,
         max_samples=max_samples,
         random_state=random_state,
-        n_jobs=-1,
+        n_jobs=n_jobs,
     )
     model.fit(X)
     return model

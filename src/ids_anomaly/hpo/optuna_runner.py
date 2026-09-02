@@ -44,10 +44,17 @@ def run_study(
     n_trials: int,
     direction: str = "maximize",
     seed: int = 42,
+    n_jobs: int = 1,
 ) -> StudyResult:
+    """``n_jobs`` > 1 runs trials concurrently via Optuna's thread pool. Safe here because every
+    objective's inner work (NumPy/BLAS, scikit-learn, numba-jitted UMAP, PyTorch) is C/native
+    code that releases the GIL during the actual computation -- this is genuine parallelism, not
+    thread contention, and is why every per-trial estimator below is pinned to n_jobs=1 rather
+    than also parallelizing internally (nesting both would oversubscribe the machine's cores).
+    """
     sampler = optuna.samplers.TPESampler(seed=seed)
     study = optuna.create_study(direction=direction, sampler=sampler)
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+    study.optimize(objective, n_trials=n_trials, n_jobs=n_jobs, show_progress_bar=False)
     return StudyResult(best_params=study.best_params, best_value=study.best_value, study=study)
 
 
@@ -61,7 +68,11 @@ def objective_isolation_forest(
     max_samples = trial.suggest_float("max_samples", 0.1, 1.0)
     contamination = trial.suggest_float("contamination", 0.01, 0.3)
     model = fit_isolation_forest(
-        X_train, n_estimators=n_estimators, contamination=contamination, max_samples=max_samples
+        X_train,
+        n_estimators=n_estimators,
+        contamination=contamination,
+        max_samples=max_samples,
+        n_jobs=1,  # avoid nested parallelism: run_study() already parallelizes across trials
     )
     return float(roc_auc_score(y_val_is_attack, if_score(model, X_val)))
 
