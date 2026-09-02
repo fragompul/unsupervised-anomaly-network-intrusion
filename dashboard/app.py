@@ -32,7 +32,6 @@ from bokeh.models import (
 )
 from bokeh.palettes import Turbo256
 from bokeh.plotting import figure
-from bokeh.transform import linear_cmap
 
 from data import EMBEDDING_KEYS, SCORE_KEYS, Artifacts
 from projection import ROTATE_PROJECT_JS, normalize_embedding, rotate_project
@@ -86,7 +85,11 @@ scatter_fig.outline_line_color = "#333"
 
 scatter_renderer = scatter_fig.scatter(
     "x", "y", source=source, size="size", alpha="alpha",
-    fill_color=linear_cmap("color_value", palette=Turbo256, low=color_mapper.low, high=color_mapper.high),
+    # Share the same mapper instance with the ColorBar below (not bokeh.transform.linear_cmap,
+    # which would build its own separate mapper) -- otherwise updating color_mapper.low/high in
+    # the embedding/color-change callback would move the color bar without moving the actual
+    # point colors, since the two would silently drift out of sync.
+    fill_color={"field": "color_value", "transform": color_mapper},
     line_color=None,
 )
 
