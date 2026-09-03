@@ -79,3 +79,27 @@ data already sitting in the `ColumnDataSource`. Switching embeddings, recoloring
 anomaly threshold is infrequent enough that a server round-trip (recomputing NumPy arrays in
 Python) is simpler to reason about and plenty fast. See
 [dashboard/projection.py](../dashboard/projection.py) for the shared Python/JS projection math.
+
+## Visual design
+
+Three layers, each reaching a different part of the rendered page:
+
+* **`dashboard/templates/index.html`** -- a Jinja2 template overriding only Bokeh's `preamble`
+  block (page fonts, background gradient, scrollbar, and hover-tooltip CSS). Bokeh only
+  auto-discovers `templates/index.html` for directory-style apps (a `main.py`); a single-file
+  `bokeh serve app.py` has to load and assign it explicitly via `curdoc().template`.
+* **`dashboard/theme.py`: `DASHBOARD_THEME`** -- a `bokeh.themes.Theme` applied via
+  `curdoc().theme`, styling every figure's background, grid, axes and legend. Only reaches
+  plot-level models: `bokeh.plotting.figure()` returns an instance of the lowercase `figure`
+  class (a `Plot` subclass), not `Figure` -- theme keys have to target `"Plot"`, a real gotcha
+  documented in the module itself after a first attempt silently did nothing.
+* **Per-widget `stylesheets`** (also in `theme.py`) -- `Select`, `Slider` and `DataTable` render
+  inside their own shadow DOM, which neither the page-level CSS nor the `Theme` can reach.
+  Bokeh 3's `model.stylesheets` injects scoped CSS directly into that shadow root, which is how
+  the controls and results table pick up the dark palette.
+
+Attack categories get a hand-picked, semantically stable color (normal=cyan, dos=rose,
+probe=amber, r2l=violet, u2r=magenta) applied as a precomputed hex-string column rather than a
+`linear_cmap`, so the legend swatches and the actual point colors are guaranteed to agree; the
+fine-grained `label` field (dozens of distinct values) falls back to an evenly-spaced HSL sweep
+instead of hand-picking dozens of colors.

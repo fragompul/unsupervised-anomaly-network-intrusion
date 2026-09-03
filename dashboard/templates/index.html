@@ -1,0 +1,44 @@
+{% extends base %}
+
+{% block preamble %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --bg-elevated: #0d1220;
+    --card: #131829;
+    --card-border: #232b42;
+    --text: #eef1f8;
+    --text-dim: #8b93ab;
+    --accent: #22d3ee;
+  }
+  html, body {
+    background: radial-gradient(1200px 600px at 10% -10%, #0f1830 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--bg-elevated); }
+  ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  ::selection { background: rgba(34,211,238,0.35); }
+
+  /* Bokeh hover tooltips render as siblings of <body>, outside every widget's shadow root, so a
+     plain global rule reaches them -- capped height + scroll keeps a dense, overlapping-points
+     hover from turning into a tooltip stack that swallows the page. */
+  .bk-Tooltip {
+    max-height: 220px;
+    overflow-y: auto;
+    background: #131829 !important;
+    border: 1px solid #232b42 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5) !important;
+    padding: 2px !important;
+  }
+  .bk-Tooltip > div { border-color: #232b42 !important; }
+</style>
+{% endblock %}

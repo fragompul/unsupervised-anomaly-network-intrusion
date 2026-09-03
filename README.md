@@ -76,11 +76,18 @@ for a responsive feel, linked to an anomaly drill-down table where box/lasso-sel
 filters the table and vice versa. It supports live switching between PCA, UMAP, Autoencoder and
 t-SNE embeddings, four independent anomaly scores, and an adjustable "flag top X%" threshold.
 
+A dark, custom-themed UI on top of that (`dashboard/theme.py` + a Jinja2 page template): a hand
+picked categorical palette per attack category, KPI cards computed live from the actual pipeline
+results, a compact styled hover tooltip (Bokeh's default stacks one tooltip per overlapping point,
+capped and restyled here rather than left at browser defaults), and every widget (selects, sliders,
+the results table) reskinned via Bokeh 3's per-model `stylesheets`, since a `Theme` only reaches
+plot-level models, not shadow-DOM widgets.
+
 ![3D embedding explorer, UMAP embedding colored by attack category](docs/assets/dashboard_scatter.png)
 
 *The 3D scatter above is a static capture of the live view: 22,544 NSL-KDD test flows embedded via
-UMAP, colored by ground-truth attack category (0=normal, 1=dos, 2=probe, 3=r2l, 4=u2r), rotatable
-and linked to the anomaly table in the running app. See Installation below to run it yourself.*
+UMAP, colored by ground-truth attack category, rotatable and linked to the anomaly table in the
+running app. See Installation below to run it yourself.*
 
 ## ⚙️ Installation & Usage
 
@@ -186,6 +193,11 @@ consensus analysis: [docs/results.md](docs/results.md).
   scikit-learn's own `HDBSCAN` implementation while writing tests: a single, unimodal Gaussian
   blob has no density valley for stability-based cluster selection to split on. Documented in
   `tests/test_clustering.py` rather than "fixed" by quietly picking different test data.
+- **A Bokeh `Theme` targeting `"Figure"` silently does nothing.** `bokeh.plotting.figure()`
+  actually returns an instance of the lowercase `figure` class, a subclass of `Plot`; theme
+  lookups match by exact class name, so every figure kept its default white background until the
+  theme key was changed to `"Plot"`. Caught by comparing `type(fig).__mro__` in a throwaway
+  script rather than assuming the public API name was the real one, see `dashboard/theme.py`.
 
 ## 📂 Project Structure
 
