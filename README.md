@@ -76,8 +76,11 @@ for a responsive feel, linked to an anomaly drill-down table where box/lasso-sel
 filters the table and vice versa. It supports live switching between PCA, UMAP, Autoencoder and
 t-SNE embeddings, four independent anomaly scores, and an adjustable "flag top X%" threshold.
 
-*(Screenshot / GIF added once the dashboard is running against real pipeline results, see
-Installation below to run it yourself.)*
+![3D embedding explorer, UMAP embedding colored by attack category](docs/assets/dashboard_scatter.png)
+
+*The 3D scatter above is a static capture of the live view: 22,544 NSL-KDD test flows embedded via
+UMAP, colored by ground-truth attack category (0=normal, 1=dos, 2=probe, 3=r2l, 4=u2r), rotatable
+and linked to the anomaly table in the running app. See Installation below to run it yourself.*
 
 ## ⚙️ Installation & Usage
 
