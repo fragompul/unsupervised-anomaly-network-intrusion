@@ -31,6 +31,11 @@ from ids_anomaly.anomaly.deep_svdd import anomaly_score as svdd_score
 from ids_anomaly.clustering import density, kmeans_gmm
 from ids_anomaly.data.download import download_raw
 from ids_anomaly.data.preprocess import Dataset, load_datasets, normal_only
+from ids_anomaly.evaluation.error_analysis import (
+    consensus_misses,
+    method_agreement,
+    rank_normalized_scores,
+)
 from ids_anomaly.evaluation.metrics import (
     anomaly_scoring_metrics,
     clustering_metrics,
@@ -301,6 +306,18 @@ def run_full_pipeline(
         for name, scores in score_map.items()
     }
     all_metrics["per_category_detection_rate"] = per_category
+
+    ranked_scores = rank_normalized_scores(score_map)
+    agreement = method_agreement(ranked_scores, FLAG_QUANTILE)
+    misses = consensus_misses(ranked_scores, test_ds.is_attack, FLAG_QUANTILE, min_methods_missing=4)
+    missed_categories = test_ds.attack_category[misses.index]
+    cats, counts = np.unique(missed_categories, return_counts=True) if len(misses) else ([], [])
+    all_metrics["cross_method_consensus"] = {
+        "jaccard_agreement": agreement.to_dict(),
+        "n_attacks_missed_by_all_methods": int(len(misses)),
+        "missed_by_all_category_counts": {c: int(n) for c, n in zip(cats, counts, strict=True)},
+    }
+
     all_metrics["timing_seconds"] = timing
     all_metrics["hpo_n_jobs"] = hpo_n_jobs
 

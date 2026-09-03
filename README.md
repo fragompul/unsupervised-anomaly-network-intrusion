@@ -123,8 +123,25 @@ cross-method consensus analysis. Headline numbers below come from the actual run
 ships with.
 
 <!-- RESULTS_SUMMARY_START -->
-*Populated automatically from `results/metrics/results.json`, see docs/results.md for the full
-tables.*
+| Method | Regime | ROC-AUC | PR-AUC |
+|---|---|---|---|
+| Isolation Forest | unsupervised | 0.879 | 0.859 |
+| **One-Class SVM** | semi-supervised | **0.968** | **0.958** |
+| Deep SVDD | semi-supervised | 0.948 | 0.940 |
+| Autoencoder reconstruction | semi-supervised | 0.961 | 0.947 |
+
+**Every semi-supervised detector beats the fully-unsupervised Isolation Forest by a wide margin.**
+On NSL-KDD, a curated attack-free training window is worth more than any within-method
+hyperparameter choice, a real, actionable answer, not a foregone conclusion (see
+[docs/results.md](docs/results.md#anomaly-detection-head-to-head)).
+
+For clustering, the autoencoder embedding + HDBSCAN gives the best agreement with attack
+categories (ARI 0.354, NMI 0.484) of all nine reduction × clustering combinations tested. Across
+every detector, **R2L is the shared blind spot**: 77.3% of R2L attacks are missed by all four
+independently trained detectors at once, strong evidence the limitation sits in the feature
+representation, not in any one model's capacity, while the rarest category, U2R (n=67), is
+detected best by every method (58-64%). Full tables, per-category breakdowns and the cross-method
+consensus analysis: [docs/results.md](docs/results.md).
 <!-- RESULTS_SUMMARY_END -->
 
 ## 🔑 Key Engineering Decisions
