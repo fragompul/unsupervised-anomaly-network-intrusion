@@ -174,7 +174,6 @@ function Drift() {
               </div>
             ))}
           </div>
-          </div>
         </Card>
       </div>
     </section>
