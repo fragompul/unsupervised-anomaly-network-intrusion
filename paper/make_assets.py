@@ -109,6 +109,20 @@ if main:
     ens = [r for r in main["table"] if r["detector"] == "ens_all" and r["regime"] == "clean"]
     if ens:
         macro("ensFprOne", f"{100 * np.mean([r['a1_fpr'] for r in ens]):.2f}")
+    tags = {"nsl_kdd": "NSL", "unsw_nb15": "UNSW", "cicids2017": "CIC"}
+    for k, tg in tags.items():
+        v = [r["a1_fpr"] for r in singles if r["dataset"] == k]
+        if v:
+            macro(f"singleFpr{tg}", f"{100 * np.mean(v):.1f}")
+    div = [r for r in main["table"] if r["detector"] == "ens_diverse" and r["regime"] == "clean"]
+    if div:
+        macro("divFprMin", f"{100 * min(r['a1_fpr'] for r in div):.1f}")
+        macro("divFprMax", f"{100 * max(r['a1_fpr'] for r in div):.1f}")
+        macro("divTprMin", f"{100 * min(r['a5_tpr'] for r in div):.0f}")
+        macro("divTprMax", f"{100 * max(r['a5_tpr'] for r in div):.0f}")
+    allu = [r for r in main["table"] if r["detector"] == "ens_all" and r["regime"] == "clean" and r["dataset"] == "unsw_nb15"]
+    if allu:
+        macro("ensAllUnswTpr", f"{100 * allu[0]['a5_tpr']:.1f}")
     sing_fpr = [r["a1_fpr"] for r in singles]
     if sing_fpr:
         macro("singleFprOne", f"{100 * np.mean(sing_fpr):.2f}")
