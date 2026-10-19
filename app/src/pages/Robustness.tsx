@@ -159,7 +159,7 @@ function Drift() {
         <Card className="p-6">
           <SectionTitle hint="Realized false-positive rate on benign flows · nominal 1%">Calibration decay by day</SectionTitle>
           <Heatmap rows={ordered} cols={days} values={fprVals} rowLabel={(id) => detTitle(id, summary?.titles)} color={(v) => rampCss(Math.min(1, Math.log10(Math.max(v, 0.002) / 0.002) / 2.2))} format={(v) => `${(v * 100).toFixed(v < 0.01 ? 2 : 1)}%`} cellH={26} labelW={150} textColor={(v) => (v > 0.1 ? '#10131f' : 'rgba(255,255,255,0.92)')} />
-          <p className="mt-2 text-xs text-faint">A cell near 1% means the guarantee held. Values above ~3% are a broken promise. Tree-based and linear-reconstruction detectors stay closest to budget; density, distance and deep detectors break hardest.</p>
+          <p className="mt-2 text-xs text-faint">A cell near 1% means the guarantee held. Values above ~3% are a broken promise. Tail-probability and tree detectors (ECOD, COPOD, HBOS, Isolation Forest) stay closest to budget; deep, density and distance models break hardest.</p>
         </Card>
         <Card className="p-6">
           <SectionTitle hint={d.psi_fpr_spearman ? `Spearman ρ = ${d.psi_fpr_spearman.rho.toFixed(2)}` : undefined}>A label-free alarm</SectionTitle>

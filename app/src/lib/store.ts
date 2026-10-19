@@ -19,7 +19,7 @@ interface ExplorerState {
 export const useExplorer = create<ExplorerState>((set) => ({
   datasetKey: 'unsw_nb15',
   embedding: 'umap',
-  detector: 'ens_all',
+  detector: 'ae',
   colorBy: 'category',
   alpha: 0.05,
   selected: null,

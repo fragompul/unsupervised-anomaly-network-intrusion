@@ -257,8 +257,8 @@ function Trace({ data, pos, color, ref: refLine, max, days }: { data: { i: numbe
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-[1500px] px-6 pb-24 pt-28">
-      <PageHeader eyebrow="Live replay" title={<>Watch the guarantee <span className="grad-text">decay in real time.</span></>}>
-        Four days of traffic as a stream, scored against a threshold fixed on Monday. The false-positive rate drifts above its budget — and a label-free monitor raises the alarm.
+      <PageHeader eyebrow="Live replay" title={<>Watch the guarantee <span className="grad-text">break in real time.</span></>}>
+        Four days of traffic as a stream, scored against a threshold fixed on Monday. The false-positive rate leaves its budget on some days — and a label-free monitor sees it coming.
       </PageHeader>
       {children}
     </div>

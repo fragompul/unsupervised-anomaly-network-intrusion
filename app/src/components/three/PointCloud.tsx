@@ -122,8 +122,8 @@ function buildAppearance(p: CloudProps) {
       sizes[i] = 6 + 14 * Math.min(1, nl / maxNl)
       alphas[i] = 0.35 + 0.65 * Math.min(1, nl / (maxNl * 0.6))
     } else {
-      sizes[i] = (isNormal ? 7 : 10) * (flagged ? 1.55 : 1)
-      alphas[i] = flagged ? 1 : isNormal ? 0.36 : 0.6
+      sizes[i] = (isNormal ? 6 : 9) * (flagged ? 1.5 : 1)
+      alphas[i] = flagged ? 0.95 : isNormal ? 0.22 : 0.42
     }
   }
   return { colors, sizes, alphas }

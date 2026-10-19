@@ -1,17 +1,12 @@
-// Category colors tuned for additive blending on a near-black background.
-const KNOWN: Record<string, string> = {
-  normal: '#5b6a8f',
-  dos: '#ff6b81', ddos: '#ff4d6d', generic: '#ff8fa3',
-  probe: '#ffb84d', portscan: '#ffb84d', reconnaissance: '#ffc76b',
-  r2l: '#c084fc', exploits: '#b38bff', webattack: '#d8a8ff',
-  u2r: '#34d399', bruteforce: '#2dd4bf', backdoor: '#5eead4',
-  fuzzers: '#60a5fa', bot: '#38bdf8', analysis: '#7dd3fc',
-  shellcode: '#f472b6', worms: '#fb923c', infiltration: '#a3e635', heartbleed: '#facc15',
-}
-const FALLBACK = ['#ff6b81', '#ffb84d', '#c084fc', '#34d399', '#60a5fa', '#f472b6', '#fb923c', '#a3e635']
+// Category colours: 'normal' recedes; attack families get maximally distinct hues (assigned by
+// manifest order so a legend never repeats a colour), tuned for additive blending on near-black.
+const NORMAL = '#5b6a8f'
+const PALETTE = ['#ff5d73', '#ffb020', '#a78bfa', '#2dd4bf', '#60a5fa', '#f472b6', '#a3e635', '#fb923c', '#22d3ee', '#e879f9', '#facc15', '#34d399']
 
 export function categoryColor(name: string, index = 0): string {
-  return KNOWN[name.toLowerCase()] ?? FALLBACK[index % FALLBACK.length]
+  if (name.toLowerCase() === 'normal') return NORMAL
+  // index 0 is 'normal' in every manifest, so attacks start at index 1
+  return PALETTE[(Math.max(1, index) - 1) % PALETTE.length]
 }
 
 export const CATEGORY_LABEL = (c: string) =>
