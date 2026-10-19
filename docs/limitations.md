@@ -1,60 +1,60 @@
-# Limitations and Future Work
+# Limitations and future work
 
 Stated plainly, as part of the deliverable rather than an afterthought.
 
-## Dataset
+## Datasets
 
-* **NSL-KDD is dated** (features engineered ~1999-2009). Its 41 hand-crafted flow statistics do
-  not reflect modern traffic (TLS 1.3, QUIC, encrypted DNS) or contemporary attack techniques.
-  CICIDS2017 would be the natural next step. Its official host requires a personal-data
-  registration form to download, which this project deliberately avoided (see the root README's
-  *Key Engineering Decisions*); a version obtainable without that gate (e.g. via an
-  institutionally-agreed mirror) is the natural follow-up.
-* **Attack-category imbalance** is severe (U2R in particular has a handful of training
-  examples), which the per-category detection-rate breakdown in `docs/results.md` surfaces
-  directly rather than hiding behind an aggregate accuracy number.
-* NSL-KDD's simulated traffic is not real production traffic; base rates, attack mixes, and
-  "normal" variability all differ from a live network, so absolute metric values should not be
-  read as production-readiness numbers.
+* **All three corpora are lab-generated.** NSL-KDD (1999 traffic re-cut in 2009), UNSW-NB15 (2015,
+  synthetic IXIA traffic) and CIC-IDS2017 (a five-day testbed) do not reflect today's TLS 1.3 / QUIC
+  / encrypted-DNS networks, and none is production traffic. Absolute numbers are *not*
+  production-readiness numbers; the study's claim is about **relative** behaviour under
+  contamination, drift and shift.
+* **Known dataset issues.** CIC-IDS2017 has documented labeling and flow-construction problems
+  (Engelen et al., 2021); we repair its mixed timestamp formats and drop identifiers (IPs, ports,
+  flow id) but we do not re-label. The UNSW-NB15 mirror we use swaps the `train`/`test` file names
+  relative to the official split (handled by row count). UNSW's released training split is 68%
+  attacks, so the *natural* regime there is more adversarial than any realistic deployment, which
+  is why E2 injects attacks at controlled rates instead.
+* **CIC-IDS2017 is subsampled** (class-aware, rare classes kept whole), which tilts rare-attack
+  prevalence upward relative to the raw capture.
+* **The harmonized cross-dataset view is lossy** (18 features, two datasets). A failure to transfer
+  there is evidence about *that* feature space, not about every possible representation.
+* **Timestamps:** CIC-IDS2017's 12-hour clock without AM/PM is repaired by an 08:00–17:00
+  assumption; within-day ordering is therefore approximate.
 
 ## Methodology
 
-* **Anomalous ≠ malicious.** Every method here detects statistical deviation from learned
-  "normal" structure. A legitimate but unusual traffic pattern (a new but benign application, an
-  unusual but authorized bulk transfer) will score as anomalous exactly like an attack would.
-  None of these methods, on their own, distinguish the two. Doing so requires either analyst
-  triage on flagged flows (which the dashboard is built to support) or a supervised layer on top
-  trained with confirmed labels.
-* **HPO uses a labeled validation slice.** This project is explicit that hyperparameter
-  selection is not "pure" unsupervised learning (see `methodology.md`), but it is worth
-  restating: a deployment with zero labeled data at all would need a different tuning strategy
-  (e.g. internal metrics only, or a much smaller/cheaper labeled sample than used here).
-* **HDBSCAN and t-SNE do not have a native out-of-sample transform.** HDBSCAN's test-split
-  labels are obtained by re-fitting on the test embedding with hyperparameters transferred from
-  the training-embedding search, rather than via `approximate_predict` against the exact
-  training-fitted model, a defensible, commonly used evaluation pattern for density clustering,
-  but a design choice worth flagging rather than presenting as a true streaming "predict."
-* **One-Class SVM is trained on a bounded subsample** (default 8000 rows) for CPU tractability;
-  a full-data SVM (or a linear/Nyström-approximated kernel) might perform differently and was out
-  of scope for this project's compute budget.
-* **Deep SVDD's hyperparameters were not searched by Optuna** (see `docs/experiments.md`), a
-  deliberate compute trade-off, not an oversight, but it means the Deep SVDD row in the results
-  table is not on fully equal tuning footing with the other detectors.
+* **Fixed hyperparameters.** Every detector uses one configuration across datasets. This avoids
+  label leakage into "unsupervised" tuning but under-serves detectors that would profit from
+  per-dataset tuning (the legacy NSL-KDD pipeline keeps its Optuna study, and its numbers are
+  not comparable to the new benchmark's).
+* **A clean calibration slice is assumed** (15% of clean normals, capped at 20k). It is a weaker
+  assumption than a clean training set but not a free one. The conformal guarantee is exactly as
+  strong as exchangeability between calibration and deployment traffic, which E3/E4 show can fail.
+* **Seeds are replicates over models, not over datasets.** Dataset splits are fixed, so
+  Friedman tests over (dataset, regime, seed) blocks are optimistic; the analysis also reports
+  coarser (dataset × regime) blocks.
+* **CTR's trim is a hyperparameter.** It is an upper bound on assumed contamination; E2 reports
+  the full trade-off (including an oracle), but a deployment must still choose it.
+* **Anomalous ≠ malicious.** Every method detects deviation from learned normality; a benign but
+  unusual flow scores like an attack. Triage and a supervised layer remain necessary.
+* **TabPFN-style tabular foundation models were evaluated for feasibility and excluded.** The
+  weights are downloadable, but using them as unsupervised detectors requires one conditional
+  prediction per feature per flow (~70 per flow here), which is impractical on CPU for hundreds of
+  thousands of flows, and their license is non-standard.
+* **Single machine, CPU only.** Latency figures are relative (per 1,000 flows on a laptop CPU), not
+  deployment benchmarks.
 
 ## What a real deployment would still need
 
-* A feedback loop to periodically re-fit against drifting "normal" traffic (unsupervised models
-  degrade silently as the definition of normal shifts).
-* Analyst-in-the-loop triage on flagged flows, since none of these methods alone separates
-  "anomalous" from "malicious" (see above).
-* Latency/throughput engineering for streaming inference. This project evaluates on static
-  batches, not a live flow stream.
+* A drift response (the PSI alarm is a signal, not a policy): re-calibration schedule, re-fit
+  triggers and analyst feedback.
+* Streaming inference engineering; the replay is a simulation over stored flows.
+* Adversarial evaluation: the benchmark does not test evasion or poisoning by an adaptive attacker.
 
 ## Natural next steps
 
-* Swap in CICIDS2017 (or another registration-free modern IDS dataset) once available without a
-  personal-data form.
-* Extend the training-regime ablation (unsupervised vs. semi-supervised) to every anomaly
-  detector, not just the autoencoder, with a matched compute budget for a fair comparison.
-* Add a streaming/online variant of at least one detector (e.g. incremental Isolation Forest) to
-  address the "static batch" limitation above.
+* Add modern encrypted-traffic corpora and re-run the protocol unchanged.
+* Online/streaming variants with conformal re-calibration under drift (e.g. weighted or adaptive
+  conformal methods).
+* Cost-sensitive operating points using analyst-triage budgets instead of a fixed α.
