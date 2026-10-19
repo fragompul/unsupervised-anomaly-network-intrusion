@@ -270,14 +270,14 @@ def run_transfer_cell(cell: Cell, raw_dir: Path, out_dir: Path) -> None:
 def main_cells(seeds: int, datasets: tuple[str, ...] = DATASETS) -> list[Cell]:
     return [
         Cell("main", d, s, regime, (("regime", regime),))
-        for d in datasets for regime in ("clean", "natural") for s in range(seeds)
-    ]  # fmt: skip
+        for s in range(seeds) for d in datasets for regime in ("clean", "natural")
+    ]  # fmt: skip  (seed-major: a partial run is still balanced across datasets)
 
 
 def contamination_cells(seeds: int, datasets: tuple[str, ...] = DATASETS) -> list[Cell]:
     return [
         Cell("contamination", d, s, f"rho{rho:g}", (("rho", rho),))
-        for d in datasets for rho in E2_RHOS for s in range(seeds)
+        for s in range(seeds) for d in datasets for rho in E2_RHOS
     ]  # fmt: skip
 
 
@@ -291,7 +291,7 @@ def transfer_cells(seeds: int) -> list[Cell]:
         pairs += [(a, b, "source"), (a, b, "target")]
     return [
         Cell("transfer", f"{a}_to_{b}", s, mode, (("source", a), ("target", b), ("scaler", mode)))
-        for a, b, mode in pairs for s in range(seeds)
+        for s in range(seeds) for a, b, mode in pairs
     ]  # fmt: skip
 
 
