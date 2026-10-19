@@ -146,11 +146,13 @@ if c:
         worst = max(deg, key=lambda d: d["drop"])
         macro("worstDropPts", f"{100 * worst['drop']:.0f}")
         macro("worstDropName", tex(title(worst["detector"])))
+    def roc_at(ds: str, det: str, rho: float) -> float | None:
+        return next((r["roc"] for r in c["table"] if r["dataset"] == ds and r["detector"] == det and abs(r["rho"] - rho) < 1e-9), None)
+
     lines = [r"\begin{tabular}{llrrrr}", r"\toprule", r"Dataset & Detector & $\rho{=}0$ & $\rho{=}5\%$ & $\rho{=}5\%$ + CTR & $\Delta$ \\", r"\midrule"]  # fmt: skip
     for d in dsets:
         for det in ("ae", "knn", "flow", "gmm"):
-            g = lambda rho, s="": next((r["roc"] for r in c["table"] if r["dataset"] == d and r["detector"] == det + s and abs(r["rho"] - rho) < 1e-9), None)  # noqa: E731
-            a, b, cc = g(0.0), g(0.05), g(0.05, "+ctr0.1")
+            a, b, cc = roc_at(d, det, 0.0), roc_at(d, det, 0.05), roc_at(d, det + "+ctr0.1", 0.05)
             if None in (a, b, cc):
                 continue
             lines.append(rf"{DS[d]} & {tex(title(det))} & {a:.3f} & {b:.3f} & {cc:.3f} & {cc - b:+.3f} \\")
@@ -255,9 +257,10 @@ for ax, m in zip(axes, MAN["datasets"], strict=True):
     ax.set_title(m["title"], fontsize=8)
     ax.set_xlabel("features deleted $k$")
     nmi = m["explain"]["attribution_cluster_nmi"]
-    macro(f"nmi{m['key'].replace('_', '')}", "n/a" if nmi is None else f"{nmi:.2f}")
-    macro(f"del3{m['key'].replace('_', '')}", f"{100 * dl['attributed'][2]:.0f}")
-    macro(f"del3rand{m['key'].replace('_', '')}", f"{100 * dl['random'][2]:.0f}")
+    tag = {"nsl_kdd": "NSL", "unsw_nb15": "UNSW", "cicids2017": "CIC"}[m["key"]]  # macro names: letters only
+    macro(f"nmi{tag}", "n/a" if nmi is None else f"{nmi:.2f}")
+    macro(f"delThree{tag}", f"{100 * dl['attributed'][2]:.0f}")
+    macro(f"delThreeRand{tag}", f"{100 * dl['random'][2]:.0f}")
 axes[0].set_ylabel("score removed")
 axes[0].legend(fontsize=6, frameon=False)
 fig.tight_layout()

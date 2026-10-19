@@ -1,0 +1,24 @@
+\begin{tabular}{lcc}
+\toprule
+ & \multicolumn{1}{c}{NSL-KDD-C} & \multicolumn{1}{c}{NSL-KDD-N} \\
+\midrule
+Autoencoder & \textbf{0.966} & 0.818 \\
+kNN distance & 0.962 & 0.648 \\
+$\beta$-VAE & 0.962 & 0.814 \\
+Gaussian mixture & 0.959 & \textbf{0.931} \\
+Deep SVDD & 0.957 & 0.734 \\
+PCA reconstruction & 0.955 & 0.815 \\
+ECOD & 0.952 & 0.903 \\
+NeuTraL AD & 0.951 & 0.737 \\
+Isolation Forest & 0.949 & 0.857 \\
+COPOD & 0.949 & 0.897 \\
+HBOS & 0.945 & 0.853 \\
+RealNVP flow & 0.933 & 0.819 \\
+Masked Tab-Transformer & 0.930 & 0.789 \\
+One-Class SVM & 0.886 & 0.846 \\
+Local Outlier Factor & 0.865 & 0.641 \\
+\midrule
+Ensemble (all) & 0.961 & 0.874 \\
+Ensemble (diverse 5) & 0.960 & 0.816 \\
+\bottomrule
+\end{tabular}
