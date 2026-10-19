@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use Noctua, please cite it as below."
+title: "Noctua: Unsupervised Network Intrusion Detection under Training Contamination, Temporal Drift and Dataset Shift"
+type: software
+version: 0.2.0
+date-released: 2026-10-20
+license: MIT
+repository-code: "https://github.com/fragompul/unsupervised-anomaly-network-intrusion"
+authors:
+  - family-names: "Gómez Pulido"
+    given-names: "Francisco Javier"
+keywords:
+  - intrusion detection
+  - anomaly detection
+  - conformal prediction
+  - concept drift
+  - unsupervised learning
