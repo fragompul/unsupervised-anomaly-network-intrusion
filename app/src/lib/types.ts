@@ -130,6 +130,7 @@ export interface Summary {
     table: { detector: string; day: string; roc?: number; psi_benign: number; fpr_a1: number; fpr_a5: number; tpr_a5?: number; n_attack: number; n_normal: number }[]
     psi_fpr_spearman: { rho: number; p: number } | null
     drift_alarm: { threshold_psi: number; tp: number; fp: number; fn: number; precision: number | null; recall: number | null }
+    drift_alarms?: { threshold_psi: number; tp: number; fp: number; fn: number; precision: number | null; recall: number | null }[]
     coverage: { detector: string; day: string; alpha: number; fpr: number }[]
   }
   transfer?: {

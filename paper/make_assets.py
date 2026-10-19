@@ -193,13 +193,19 @@ if d:
     plt.close(fig)
     if d["psi_fpr_spearman"]:
         macro("psiSpearman", f"{d['psi_fpr_spearman']['rho']:.2f}")
-    al = d["drift_alarm"]
+    al = next(a for a in d["drift_alarms"] if abs(a["threshold_psi"] - 0.10) < 1e-9)
+    macro("alarmThr", "0.10")
     macro("alarmRecall", "n/a" if al["recall"] is None else f"{100 * al['recall']:.0f}")
     macro("alarmPrecision", "n/a" if al["precision"] is None else f"{100 * al['precision']:.0f}")
-    fri = [r["fpr_a1"] for r in d["table"] if r["day"] == "Fri" and not r["detector"].startswith("ens_")]
-    tue = [r["fpr_a1"] for r in d["table"] if r["day"] == "Tue" and not r["detector"].startswith("ens_")]
-    macro("driftFprTue", f"{100 * np.mean(tue):.1f}")
-    macro("driftFprFri", f"{100 * np.mean(fri):.1f}")
+    hi = d["drift_alarm"]
+    macro("alarmHiPrecision", "n/a" if hi["precision"] is None else f"{100 * hi['precision']:.0f}")
+    macro("alarmHiRecall", "n/a" if hi["recall"] is None else f"{100 * hi['recall']:.0f}")
+    per_day = {day: float(np.mean([r["fpr_a1"] for r in d["table"] if r["day"] == day and not r["detector"].startswith("ens_")])) for day in days}  # fmt: skip
+    worst, best = max(per_day, key=per_day.get), min(per_day, key=per_day.get)
+    macro("driftWorstDay", {"Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday"}[worst])
+    macro("driftBestDay", {"Tue": "Tuesday", "Wed": "Wednesday", "Thu": "Thursday", "Fri": "Friday"}[best])
+    macro("driftWorstFpr", f"{100 * per_day[worst]:.1f}")
+    macro("driftBestFpr", f"{100 * per_day[best]:.1f}")
 
 # ---------------------------------------------------------------------------------- transfer
 t = S.get("transfer")

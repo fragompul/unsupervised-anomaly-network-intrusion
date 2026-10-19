@@ -154,21 +154,26 @@ function Drift() {
 
   return (
     <section>
-      <SectionHead id="drift" n="2" title="A week of drift" text="Fit on Monday’s attack-free CIC-IDS2017 traffic and calibrate a conformal threshold on held-out Monday flows (nominal false-positive rate 1%). Then replay Tuesday to Friday: the benign traffic itself changes, and the guarantee quietly stops holding." />
+      <SectionHead id="drift" n="2" title="A week of drift" text="Fit on Monday’s attack-free CIC-IDS2017 traffic and calibrate a conformal threshold on held-out Monday flows (nominal false-positive rate 1%). Then evaluate Tuesday to Friday. Drift is not a smooth decay: each day introduces its own benign services, so the guarantee breaks on some days and holds on others — and different detectors break on different days." />
       <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Card className="p-6">
           <SectionTitle hint="Realized false-positive rate on benign flows · nominal 1%">Calibration decay by day</SectionTitle>
           <Heatmap rows={ordered} cols={days} values={fprVals} rowLabel={(id) => detTitle(id, summary?.titles)} color={(v) => rampCss(Math.min(1, Math.log10(Math.max(v, 0.002) / 0.002) / 2.2))} format={(v) => `${(v * 100).toFixed(v < 0.01 ? 2 : 1)}%`} cellH={26} labelW={150} textColor={(v) => (v > 0.1 ? '#10131f' : 'rgba(255,255,255,0.92)')} />
-          <p className="mt-2 text-xs text-faint">A cell near 1% means the guarantee held. Values above ~3% are a broken promise, and every detector breaks somewhere.</p>
+          <p className="mt-2 text-xs text-faint">A cell near 1% means the guarantee held. Values above ~3% are a broken promise. Tree-based and linear-reconstruction detectors stay closest to budget; density, distance and deep detectors break hardest.</p>
         </Card>
         <Card className="p-6">
           <SectionTitle hint={d.psi_fpr_spearman ? `Spearman ρ = ${d.psi_fpr_spearman.rho.toFixed(2)}` : undefined}>A label-free alarm</SectionTitle>
           <p className="mb-2 text-xs leading-relaxed text-muted">Population Stability Index of benign scores vs. Monday needs <em>no labels</em>, yet tracks the false-positive blow-up.</p>
           <Scatter dots={dots} xLabel="PSI of benign scores (log)" yLabel="log₁₀ realized FPR" xLog height={250} fx={(v) => (v < 0.1 ? v.toFixed(2) : v.toFixed(1))} fy={(v) => v.toFixed(1)} xTicks={[0.01, 0.1, 1, 10]} />
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Badge color="#f5b84b">PSI ≥ {alarm.threshold_psi} alarm</Badge>
-            {alarm.recall != null && <Badge color="#34d399">recall {fmt.pct(alarm.recall, 0)}</Badge>}
-            {alarm.precision != null && <Badge color="#60a5fa">precision {fmt.pct(alarm.precision, 0)}</Badge>}
+          <div className="mt-3 space-y-1.5">
+            {(d.drift_alarms ?? [alarm]).map((a) => (
+              <div key={a.threshold_psi} className="flex items-center gap-2 text-xs">
+                <Badge color="#f5b84b">PSI ≥ {a.threshold_psi}</Badge>
+                <span className="text-muted">precision</span><span className="num text-text">{a.precision != null ? fmt.pct(a.precision, 0) : '—'}</span>
+                <span className="ml-2 text-muted">recall</span><span className="num text-text">{a.recall != null ? fmt.pct(a.recall, 0) : '—'}</span>
+              </div>
+            ))}
+          </div>
           </div>
         </Card>
       </div>
