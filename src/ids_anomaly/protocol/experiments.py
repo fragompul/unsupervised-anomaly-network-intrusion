@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 import traceback
 from collections.abc import Callable
@@ -102,10 +103,15 @@ def score_cell(
     return {"scores": scores, "fit_seconds": fit_s, "score_seconds": score_s, "errors": errors}
 
 
+def _tmp_path(path: Path) -> Path:
+    """Per-process temp name: parallel workers may race to write the same shared labels file."""
+    return path.with_name(f"{path.stem}.{os.getpid()}.tmp.npz")
+
+
 def save_cell(path: Path, specs: list[str], result: dict[str, Any], meta: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     arrays = {f"scores__{k}": v for k, v in result["scores"].items()}
-    tmp = path.with_suffix(".tmp.npz")
+    tmp = _tmp_path(path)
     np.savez_compressed(
         tmp,
         specs=np.array(specs),
@@ -121,9 +127,9 @@ def save_labels(path: Path, **arrays: Any) -> None:
     if path.exists():
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp.npz")
+    tmp = _tmp_path(path)
     np.savez_compressed(tmp, **arrays)
-    tmp.replace(path)
+    tmp.replace(path)  # atomic; concurrent workers writing identical content are harmless
 
 
 # ----------------------------------------------------------------------------------- data cache
