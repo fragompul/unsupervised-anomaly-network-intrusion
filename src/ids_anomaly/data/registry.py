@@ -29,7 +29,7 @@ class DatasetInfo:
     year: int
     citation: str
     ensure: Callable[[Path], None]
-    load: Callable[[Path], tuple[Dataset, Dataset, Any]]
+    load: Callable[..., tuple[Dataset, Dataset, Any]]
 
 
 def _nsl_ensure(raw_dir: Path) -> None:
@@ -67,11 +67,11 @@ DATASETS: dict[str, DatasetInfo] = {
 }
 
 
-def load_dataset(key: str, raw_dir: Path, download: bool = True) -> Bundle:
+def load_dataset(key: str, raw_dir: Path, download: bool = True, **loader_kwargs: Any) -> Bundle:
     if key not in DATASETS:
         raise KeyError(f"unknown dataset {key!r}; choose from {sorted(DATASETS)}")
     info = DATASETS[key]
     if download:
         info.ensure(raw_dir)
-    train, test, pre = info.load(raw_dir)
+    train, test, pre = info.load(raw_dir, **loader_kwargs)
     return Bundle(key=key, train=train, test=test, preprocessor=pre)
