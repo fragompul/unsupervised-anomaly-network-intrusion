@@ -14,7 +14,7 @@ from ids_anomaly.protocol.trainsets import make_fit_sets
 DETS = ["iforest", "knn", "ae", "flow", "neutral", "pca"]
 
 
-def _scores(rng, y, shift, n_det=len(DETS)):
+def _scores(rng, y, shift, n_det=6):
     base = rng.normal(size=(n_det, len(y)))
     base[:, y == 1] += shift
     return base.astype(np.float32)
