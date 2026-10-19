@@ -78,7 +78,7 @@ instantaneous, so the 3D-to-2D projection runs entirely in the browser via `Cust
 data already sitting in the `ColumnDataSource`. Switching embeddings, recoloring, or moving the
 anomaly threshold is infrequent enough that a server round-trip (recomputing NumPy arrays in
 Python) is simpler to reason about and plenty fast. See
-[dashboard/projection.py](../dashboard/projection.py) for the shared Python/JS projection math.
+[dashboard/projection.py](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/blob/main/dashboard/projection.py) for the shared Python/JS projection math.
 
 ## Visual design
 

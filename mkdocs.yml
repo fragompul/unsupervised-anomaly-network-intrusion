@@ -1,0 +1,35 @@
+site_name: Noctua docs
+site_description: Reproducible research benchmark for unsupervised network intrusion detection.
+repo_url: https://github.com/fragompul/unsupervised-anomaly-network-intrusion
+docs_dir: docs
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: deep purple
+    accent: cyan
+  features: [navigation.sections, navigation.top, content.code.copy, toc.follow]
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+nav:
+  - Home: index.md
+  - Method:
+      - Problem statement: problem_statement.md
+      - Datasets: datasets.md
+      - Research protocol: protocol.md
+      - Methodology (legacy pipeline): methodology.md
+  - Engineering:
+      - Architecture: architecture.md
+      - Experiments (legacy HPO): experiments.md
+  - Results:
+      - Results: results.md
+      - Limitations: limitations.md
+  - Progress: PROGRESS.md
