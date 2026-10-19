@@ -229,9 +229,9 @@ def export_dataset(
 
 def _display(spec: str) -> str:
     if spec == "ens_all":
-        return "Conformal ensemble (all)"
+        return "Ensemble · all"
     if spec == "ens_diverse":
-        return "Conformal ensemble (diverse 5)"
+        return "Ensemble · diverse 5"
     base, plus, rest = spec.partition("+")
     return TITLES.get(base, base) + (f" +{rest}" if plus else "")
 

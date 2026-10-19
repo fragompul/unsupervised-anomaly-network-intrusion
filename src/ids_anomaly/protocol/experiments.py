@@ -128,6 +128,9 @@ def save_labels(path: Path, **arrays: Any) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = _tmp_path(path)
+    # pandas>=3 string columns come out as object arrays, which npz would pickle (and analysis,
+    # which loads with allow_pickle=False, could not read back): store them as fixed-width text.
+    arrays = {k: (np.asarray(v).astype(str) if np.asarray(v).dtype == object else v) for k, v in arrays.items()}
     np.savez_compressed(tmp, **arrays)
     tmp.replace(path)  # atomic; concurrent workers writing identical content are harmless
 
@@ -203,7 +206,7 @@ def run_drift_cell(cell: Cell, raw_dir: Path, out_dir: Path) -> None:
     for day, frame in days.items():
         eval_sets[day] = pre.transform(frame[features]).astype(np.float32)
         label_arrays[f"{day}__is_attack"] = (frame["category"] != "normal").to_numpy()
-        label_arrays[f"{day}__category"] = frame["category"].astype(str).to_numpy()
+        label_arrays[f"{day}__category"] = frame["category"].to_numpy(dtype=str)
         label_arrays[f"{day}__timestamp"] = frame["timestamp"].to_numpy().astype("datetime64[s]").astype(np.int64)
     save_labels(out_dir / "labels__cicids2017.npz", **label_arrays)
     specs = list(cell.p("detectors", ALL_DETECTORS))
