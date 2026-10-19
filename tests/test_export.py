@@ -54,10 +54,12 @@ def test_binary_artifacts_have_expected_shapes(exported):
 def test_points_and_attribution_are_aligned(exported):
     d, m = exported
     pts = json.loads((d / "points.json").read_text())
-    attr = json.loads((d / "attribution.json").read_text())
-    assert len(pts["category"]) == len(pts["attack"]) == len(attr["idx"]) == m["n_points"]
+    attr = np.fromfile(d / "attribution.u8", dtype=np.uint8).reshape(-1, 10)
+    assert len(pts["category"]) == len(pts["attack"]) == len(attr) == m["n_points"]
     assert max(pts["category"]) < len(m["categories"]) and pts["group_names"] == ["Thu", "Wed"]
-    assert all(len(r) == 5 and all(0 <= j < m["n_features"] for j in r) for r in attr["idx"])
+    assert (attr[:, :5] < m["n_features"]).all()
+    assert (np.diff(attr[:, 5:].astype(int), axis=1) <= 0).all()  # shares sorted descending
+    assert (attr[:, 5:].sum(axis=1) <= 255 + 5).all()  # shares of one total can't exceed 100%
 
 
 def test_rare_categories_survive_sampling():

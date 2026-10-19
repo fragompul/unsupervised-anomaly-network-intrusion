@@ -10,7 +10,7 @@ Per dataset (``<out>/<key>/``):
 * ``embedding_pca.i16`` / ``embedding_umap.i16`` -- (n, 3) int16, coordinates scaled to [-1, 1];
 * ``scores.u8``      -- (n_detectors, n) uint8: ``round(40 * -log10(conformal p-value))``;
 * ``features.i8``    -- (n, d) int8: standardized features clipped to +/-8, scaled by 127/8;
-* ``attribution.json`` -- top-5 AE feature errors per point;
+* ``attribution.u8`` -- (n, 10) uint8: top-5 AE feature indices, then their share of the error;
 * ``points.json``    -- category / attack / day index per point;
 * ``ae.json``        -- autoencoder weights + calibration quantiles for the playground;
 * ``curves.json``    -- ROC / PR curves and calibration data per detector.
@@ -166,9 +166,12 @@ def export_dataset(
     errors = ae.feature_errors(X)
     top_idx, top_val = attribution.top_k_features(errors, k=5)
     ae_scores_sample = ae.score(X)
-    (ddir / "attribution.json").write_text(
-        json.dumps({"idx": top_idx.tolist(), "val": np.round(top_val, 4).tolist()}, separators=(",", ":"))
-    )
+    # 10 bytes/point: top-5 feature indices (uint8) then each one's share of the total error (uint8/255)
+    total = np.maximum(errors.sum(axis=1, keepdims=True), 1e-12)
+    share = np.round(np.clip(top_val / total, 0, 1) * 255).astype(np.uint8)
+    if errors.shape[1] > 256:
+        raise ValueError("attribution.u8 stores feature indices as uint8")
+    np.concatenate([top_idx.astype(np.uint8), share], axis=1).tofile(ddir / "attribution.u8")
     flagged = np.flatnonzero(all_p.get("ae", all_p[det_names[0]])[idx] <= 0.05)
     eval_rows = X[flagged[:600]] if len(flagged) >= 10 else X[:600]
     faithfulness = attribution.deletion_curve(ae, eval_rows)
