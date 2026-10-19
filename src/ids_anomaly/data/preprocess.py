@@ -46,13 +46,34 @@ SKEWED_COUNT_COLUMNS: list[str] = [
 
 @dataclass
 class Dataset:
-    """A preprocessed NSL-KDD split with features held separate from labels."""
+    """A preprocessed split with features held separate from labels.
+
+    ``timestamp`` / ``group`` are optional side-channels used only for evaluation (temporal drift
+    analysis); like the labels, they never enter ``X``.
+    """
 
     X: np.ndarray
     is_attack: np.ndarray
     attack_category: np.ndarray
     label: np.ndarray
     feature_names: list[str]
+    timestamp: np.ndarray | None = None
+    group: np.ndarray | None = None
+
+    def __len__(self) -> int:
+        return int(self.X.shape[0])
+
+    def subset(self, idx: np.ndarray) -> Dataset:
+        """Row-subset by integer indices or boolean mask, keeping every side-channel aligned."""
+        return Dataset(
+            X=self.X[idx],
+            is_attack=self.is_attack[idx],
+            attack_category=self.attack_category[idx],
+            label=self.label[idx],
+            feature_names=self.feature_names,
+            timestamp=None if self.timestamp is None else self.timestamp[idx],
+            group=None if self.group is None else self.group[idx],
+        )
 
 
 def _read_raw(path: Path) -> pd.DataFrame:
@@ -119,11 +140,4 @@ def load_datasets(
 
 def normal_only(ds: Dataset) -> Dataset:
     """Subset a Dataset to normal-labeled rows, for semi-supervised (one-class) training."""
-    mask = ~ds.is_attack
-    return Dataset(
-        X=ds.X[mask],
-        is_attack=ds.is_attack[mask],
-        attack_category=ds.attack_category[mask],
-        label=ds.label[mask],
-        feature_names=ds.feature_names,
-    )
+    return ds.subset(~ds.is_attack)
