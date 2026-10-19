@@ -20,6 +20,7 @@ export interface AEScore {
   score: number
   pValue: number
   errors: Float64Array
+  recon: Float64Array
 }
 
 /** Score a standardized feature vector; p-value from the exported calibration quantiles. */
@@ -44,5 +45,5 @@ export function scoreFlow(ae: AEFile, x: ArrayLike<number>, clip = 8): AEScore {
     else hi = mid
   }
   const nGe = ((cal.length - lo) * ae.n_cal) / cal.length
-  return { score, pValue: Math.min(1, (1 + nGe) / (ae.n_cal + 1)), errors }
+  return { score, pValue: Math.min(1, (1 + nGe) / (ae.n_cal + 1)), errors, recon }
 }
