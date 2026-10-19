@@ -66,7 +66,10 @@ rows). CIC-IDS2017 uses its iid split here so every attack family exists in the 
 (`ids_anomaly.detectors.purify`): score the training rows with three structurally different cheap
 *screeners* (Isolation Forest, ECOD, PCA reconstruction), average the percentile ranks, drop the top
 `trim` fraction, refit the base detector. Reported against: no purification, trim ∈ {5, 10, 20}%,
-each single screener, and an *oracle* trim equal to the true ρ (headroom bound).
+each single screener, and an *oracle* trim equal to the true ρ (headroom bound). The ablation is
+reported as found: a single well-matched screener (ECOD) can match or beat the committee on some
+datasets, while a poorly matched one (PCA alone) can hurt; the committee's role is robustness to that
+choice, not uniform dominance.
 
 ## E3 — Temporal drift (CIC-IDS2017)
 

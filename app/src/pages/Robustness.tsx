@@ -115,7 +115,7 @@ function Contamination() {
             </div>
           </Card>
           <Card className="p-6">
-            <SectionTitle hint="Autoencoder, ρ = 5%">Ablation: why a committee?</SectionTitle>
+            <SectionTitle hint="Autoencoder, ρ = 5%">Ablation: trim level and screeners</SectionTitle>
             <div className="mt-3 space-y-2">
               {ablRows.map(({ id, row }) => (
                 <div key={id} className="grid grid-cols-[1fr_54px] items-center gap-3 text-[12.5px]">
