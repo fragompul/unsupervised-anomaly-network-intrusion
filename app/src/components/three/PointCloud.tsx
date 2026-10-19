@@ -13,6 +13,7 @@ export interface CloudProps {
   embedding: 'pca' | 'umap'
   colorBy: ColorBy
   detectorIndex: number
+  detectorIndexB?: number // for colorBy === 'diff'
   alpha: number
   hiddenCategories: string[]
   selected: number | null
@@ -77,7 +78,7 @@ const RING_VERT = /* glsl */ `
 `
 
 function buildAppearance(p: CloudProps) {
-  const { ds, colorBy, detectorIndex, alpha, hiddenCategories, ambient } = p
+  const { ds, colorBy, detectorIndex, detectorIndexB, alpha, hiddenCategories, ambient } = p
   const n = ds.n
   const colors = new Float32Array(n * 3)
   const sizes = new Float32Array(n)
@@ -95,6 +96,10 @@ function buildAppearance(p: CloudProps) {
     let rgb: number[]
     if (colorBy === 'category') rgb = catRgb[cat]
     else if (colorBy === 'truth') rgb = isAttack ? [1, 0.36, 0.5] : [0.33, 0.42, 0.62]
+    else if (colorBy === 'diff') {
+      const fb = pValue(nlogp(ds, detectorIndexB ?? 0, i)) <= alpha
+      rgb = flagged && fb ? [0.62, 0.66, 0.8] : flagged ? [0.6, 0.45, 1] : fb ? [0.1, 0.9, 1] : [0.28, 0.33, 0.48]
+    }
     else rgb = ramp(Math.min(1, nl / maxNl)).map((v) => v / 255)
     colors[i * 3] = rgb[0]
     colors[i * 3 + 1] = rgb[1]
@@ -108,6 +113,11 @@ function buildAppearance(p: CloudProps) {
     if (ambient) {
       sizes[i] = isNormal ? 6 : 9
       alphas[i] = isNormal ? 0.5 : 0.9
+    } else if (colorBy === 'diff') {
+      const fb = pValue(nlogp(ds, detectorIndexB ?? 0, i)) <= alpha
+      const any = flagged || fb
+      sizes[i] = any ? (flagged && fb ? 6.5 : 14) : 5
+      alphas[i] = any ? (flagged && fb ? 0.55 : 1) : 0.2
     } else if (colorBy === 'score') {
       sizes[i] = 6 + 14 * Math.min(1, nl / maxNl)
       alphas[i] = 0.35 + 0.65 * Math.min(1, nl / (maxNl * 0.6))
@@ -188,7 +198,7 @@ function Cloud(p: CloudProps) {
   const appearance = useMemo(
     () => buildAppearance(p),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ds, p.colorBy, p.detectorIndex, p.alpha, p.hiddenCategories, p.ambient],
+    [ds, p.colorBy, p.detectorIndex, p.detectorIndexB, p.alpha, p.hiddenCategories, p.ambient],
   )
   useEffect(() => {
     ;(geom.getAttribute('aColor') as THREE.BufferAttribute).array.set(appearance.colors)

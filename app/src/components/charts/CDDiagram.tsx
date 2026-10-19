@@ -18,7 +18,7 @@ export function CDDiagram({ ranks, cd, groups, title, family }: Props) {
   const half = Math.ceil(n / 2)
   const left = entries.slice(0, half)
   const right = entries.slice(half).reverse()
-  const pad = 190
+  const pad = 236
   const axisY = 56
   const min = Math.floor(entries[0][1])
   const max = Math.ceil(entries[n - 1][1])

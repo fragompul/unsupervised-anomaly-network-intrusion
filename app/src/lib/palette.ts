@@ -53,3 +53,11 @@ export const FAMILY_COLOR: Record<string, string> = {
   tree: '#34d399', kernel: '#60a5fa', density: '#f5b84b', distance: '#22d3ee', reconstruction: '#8b7bff',
   'deep-one-class': '#f472b6', 'self-supervised': '#fb7185', ensemble: '#ffffff', 'robust-wrapper': '#a3e635', other: '#8f98b3',
 }
+
+// Stable per-detector hues for multi-line charts (families repeat, detectors must be separable).
+export const DET_COLOR: Record<string, string> = {
+  ae: '#8b7bff', vae: '#c4bcff', knn: '#22d3ee', iforest: '#34d399', gmm: '#f5b84b', pca: '#60a5fa',
+  ecod: '#fb923c', deep_svdd: '#f472b6', flow: '#fb7185', neutral: '#a3e635', mtt: '#e879f9', lof: '#2dd4bf',
+  ocsvm: '#93c5fd', copod: '#fdba74', hbos: '#fcd34d', ens_all: '#ffffff', ens_diverse: '#d1d5db',
+}
+export const detColor = (id: string) => DET_COLOR[id.split('+')[0]] ?? '#8f98b3'

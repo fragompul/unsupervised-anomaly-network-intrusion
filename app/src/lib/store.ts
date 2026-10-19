@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type ColorBy = 'category' | 'score' | 'truth'
+export type ColorBy = 'category' | 'score' | 'truth' | 'diff'
 export type EmbeddingKind = 'pca' | 'umap'
 
 interface ExplorerState {
