@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import optuna
@@ -42,7 +42,7 @@ class StudyResult:
 def run_study(
     objective: Callable[[optuna.Trial], float],
     n_trials: int,
-    direction: str = "maximize",
+    direction: Literal["maximize", "minimize"] = "maximize",
     seed: int = 42,
     n_jobs: int = 1,
 ) -> StudyResult:

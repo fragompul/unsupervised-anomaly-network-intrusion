@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +55,12 @@ logger = logging.getLogger(__name__)
 
 RANDOM_STATE = 42
 FLAG_QUANTILE = 0.20  # evaluate at "flag the top 20% most anomalous flows"
+
+
+def _bind(objective: Callable[..., float], *args: Any) -> Callable[[Any], float]:
+    """Bind everything but the Optuna ``trial`` -- explicit (and type-checkable) where a
+    default-arg lambda would capture a loop variable implicitly."""
+    return lambda trial: objective(trial, *args)
 
 
 def _split_val(ds: Dataset, val_fraction: float = 0.15, seed: int = RANDOM_STATE) -> tuple[Dataset, Dataset]:
@@ -208,7 +215,7 @@ def run_full_pipeline(
 
         logger.info("KMeans on %s embedding...", embed_name)
         km_study = run_study(
-            lambda trial, e=embed_train: objective_kmeans(trial, e, fit_ds.attack_category),
+            _bind(objective_kmeans, embed_train, fit_ds.attack_category),
             n_trials=n_hpo_trials,
             n_jobs=hpo_n_jobs,
         )
@@ -216,7 +223,7 @@ def run_full_pipeline(
 
         logger.info("GMM on %s embedding...", embed_name)
         gmm_study = run_study(
-            lambda trial, e=embed_train: objective_gmm(trial, e, fit_ds.attack_category),
+            _bind(objective_gmm, embed_train, fit_ds.attack_category),
             n_trials=n_hpo_trials,
             n_jobs=hpo_n_jobs,
         )
@@ -227,7 +234,7 @@ def run_full_pipeline(
 
         logger.info("HDBSCAN on %s embedding...", embed_name)
         hdb_study = run_study(
-            lambda trial, e=embed_train: objective_hdbscan(trial, e, fit_ds.attack_category),
+            _bind(objective_hdbscan, embed_train, fit_ds.attack_category),
             n_trials=max(10, n_hpo_trials // 2),
             n_jobs=hpo_n_jobs,
         )
@@ -311,7 +318,7 @@ def run_full_pipeline(
     agreement = method_agreement(ranked_scores, FLAG_QUANTILE)
     misses = consensus_misses(ranked_scores, test_ds.is_attack, FLAG_QUANTILE, min_methods_missing=4)
     missed_categories = test_ds.attack_category[misses.index]
-    cats, counts = np.unique(missed_categories, return_counts=True) if len(misses) else ([], [])
+    cats, counts = np.unique(missed_categories, return_counts=True)
     all_metrics["cross_method_consensus"] = {
         "jaccard_agreement": agreement.to_dict(),
         "n_attacks_missed_by_all_methods": int(len(misses)),
