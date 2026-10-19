@@ -11,7 +11,12 @@ from ids_anomaly.pipeline import run_full_pipeline
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the unsupervised IDS benchmark pipeline.")
-    parser.add_argument("command", choices=["run"], help="Pipeline command to execute.")
+    parser.add_argument(
+        "command", choices=["run", "data"], help="`run`: NSL-KDD pipeline. `data`: fetch datasets."
+    )
+    parser.add_argument(
+        "--dataset", default="all", help="Dataset key for `data` (nsl_kdd, unsw_nb15, cicids2017, all)."
+    )
     parser.add_argument("--trials", type=int, default=25, help="Optuna trials per HPO study.")
     parser.add_argument(
         "--jobs", type=int, default=None, help="Concurrent Optuna trials (default: cpu_count - 2)."
@@ -29,7 +34,14 @@ def main() -> None:
     # Pipeline progress is genuinely useful even without -v: always show INFO for our own package.
     logging.getLogger("ids_anomaly").setLevel(logging.INFO)
 
-    if args.command == "run":
+    if args.command == "data":
+        from ids_anomaly.data.registry import DATASETS
+
+        keys = list(DATASETS) if args.dataset == "all" else [args.dataset]
+        for key in keys:
+            DATASETS[key].ensure(args.root / "data" / "raw")
+            print(f"{DATASETS[key].title}: ready")
+    elif args.command == "run":
         run_full_pipeline(args.root, n_hpo_trials=args.trials, hpo_n_jobs=args.jobs)
 
 
