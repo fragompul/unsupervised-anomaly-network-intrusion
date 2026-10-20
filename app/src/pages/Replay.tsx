@@ -170,7 +170,7 @@ function Stream({ replay }: { replay: ReplayData }) {
           </div>
         </Card>
       </div>
-      <p className="max-w-3xl text-xs leading-relaxed text-faint">Stream: 6,000 CIC-IDS2017 flows (1,500 per day, Tuesday → Friday, in time order). Scores are conformal p-values calibrated on <em>Monday’s</em> benign traffic, so the alert budget is a promise made on Monday. The PSI monitor compares the benign scores in the last {WINDOW} events with early Tuesday and uses no labels.</p>
+      <p className="max-w-3xl text-xs leading-relaxed text-faint">Stream: 6,000 CIC-IDS2017 flows (1,500 per day, Tuesday → Friday, in time order). Scores are conformal p-values calibrated on <em>Monday’s</em> benign traffic, so the alert budget is a promise made on Monday. The PSI monitor compares the benign scores in the last {WINDOW} events with early Tuesday. It needs no labels to compute, but in this demo benign flows are picked using the ground truth so that drift is not confused with attack prevalence.</p>
     </div>
   )
 }
