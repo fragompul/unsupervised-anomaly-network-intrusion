@@ -18,6 +18,7 @@ data/processed/*
 results/*
 !results/.gitkeep
 !results/metrics/
+!results/analysis/
 !results/figures/
 
 .ipynb_checkpoints/
