@@ -17,6 +17,7 @@ from typing import Any
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from ids_anomaly import __version__
@@ -109,6 +110,10 @@ def create_app() -> FastAPI:
             top_features=[{"feature": names[i], "error": float(errors[i])} for i in order],
         )
 
+    # Optional: serve the built web app (and its data) from the same origin, as in the Docker image.
+    web_dir = os.environ.get("NOCTUA_APP")
+    if web_dir and Path(web_dir).is_dir():
+        app.mount("/", StaticFiles(directory=web_dir, html=True), name="app")
     return app
 
 

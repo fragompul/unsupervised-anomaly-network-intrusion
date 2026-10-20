@@ -151,3 +151,12 @@ def test_make_fit_sets_regimes_and_contamination():
         make_fit_sets(ds, "injected", rho=0.9, n_fit=3000, seed=0)  # not enough attacks
     # calibration rows never leak into the fit set
     assert not (set(map(tuple, clean.X_cal.tolist())) & set(map(tuple, clean.X_fit.tolist())))
+
+
+def test_save_labels_never_pickles_object_arrays(tmp_path: Path):
+    obj = np.array(["dos", "normal", "probe"], dtype=object)
+    path = tmp_path / "labels.npz"
+    experiments.save_labels(path, category=obj, is_attack=np.array([1, 0, 1], dtype=bool))
+    loaded = analysis.load_labels(path)  # allow_pickle=False would raise on object dtype
+    assert loaded["category"].tolist() == ["dos", "normal", "probe"]
+    assert loaded["category"].dtype.kind == "U"

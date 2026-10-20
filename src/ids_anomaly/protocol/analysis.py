@@ -296,15 +296,19 @@ def analyze_drift(root: Path) -> dict[str, Any] | None:
     valid = df.dropna(subset=["psi_benign", "fpr_a1"])
     rho_s = spearmanr(valid["psi_benign"], valid["fpr_a1"]) if len(valid) > 5 else None
     broken = valid["fpr_a1"] >= 0.03
-    alarm = valid["psi_benign"] >= 0.25
-    tp, fp = int((alarm & broken).sum()), int((alarm & ~broken).sum())
-    fn = int((~alarm & broken).sum())
+    alarms = []
+    for thr in (0.05, 0.10, 0.25):
+        alarm = valid["psi_benign"] >= thr
+        tp, fp = int((alarm & broken).sum()), int((alarm & ~broken).sum())
+        fn = int((~alarm & broken).sum())
+        alarms.append({"threshold_psi": thr, "tp": tp, "fp": fp, "fn": fn,
+                       "precision": tp / (tp + fp) if tp + fp else None,
+                       "recall": tp / (tp + fn) if tp + fn else None})  # fmt: skip
     return {
         "table": json.loads(agg.round(5).to_json(orient="records")),
         "psi_fpr_spearman": None if rho_s is None else {"rho": float(rho_s.statistic), "p": float(rho_s.pvalue)},
-        "drift_alarm": {"threshold_psi": 0.25, "tp": tp, "fp": fp, "fn": fn,
-                        "precision": tp / (tp + fp) if tp + fp else None,
-                        "recall": tp / (tp + fn) if tp + fn else None},  # fmt: skip
+        "drift_alarm": alarms[2],
+        "drift_alarms": alarms,
         "coverage": json.loads(
             pd.DataFrame(cov_rows).groupby(["detector", "day", "alpha"], as_index=False)["fpr"].mean().round(5).to_json(orient="records")
         ),
