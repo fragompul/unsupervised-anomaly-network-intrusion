@@ -1,24 +1,24 @@
-\begin{tabular}{lcc}
+\begin{tabular}{lcccccc}
 \toprule
- & \multicolumn{1}{c}{NSL-KDD-C} & \multicolumn{1}{c}{NSL-KDD-N} \\
+ & \multicolumn{1}{c}{NSL-KDD-C} & \multicolumn{1}{c}{UNSW-NB-C} & \multicolumn{1}{c}{CIC-IDS-C} & \multicolumn{1}{c}{NSL-KDD-N} & \multicolumn{1}{c}{UNSW-NB-N} & \multicolumn{1}{c}{CIC-IDS-N} \\
 \midrule
-Autoencoder & \textbf{0.966} & 0.818 \\
-kNN distance & 0.962 & 0.648 \\
-$\beta$-VAE & 0.962 & 0.814 \\
-Gaussian mixture & 0.959 & \textbf{0.931} \\
-Deep SVDD & 0.957 & 0.734 \\
-PCA reconstruction & 0.955 & 0.815 \\
-ECOD & 0.952 & 0.903 \\
-NeuTraL AD & 0.951 & 0.737 \\
-Isolation Forest & 0.949 & 0.857 \\
-COPOD & 0.949 & 0.897 \\
-HBOS & 0.945 & 0.853 \\
-RealNVP flow & 0.933 & 0.819 \\
-Masked Tab-Transformer & 0.930 & 0.789 \\
-One-Class SVM & 0.886 & 0.846 \\
-Local Outlier Factor & 0.865 & 0.641 \\
+Autoencoder & \textbf{0.966} & 0.913 & 0.864 & 0.804 & 0.315 & 0.863 \\
+Gaussian mixture & 0.959 & 0.906 & 0.873 & 0.900 & 0.259 & 0.877 \\
+kNN distance & 0.962 & 0.916 & 0.844 & 0.646 & 0.439 & 0.843 \\
+NeuTraL AD & 0.951 & \textbf{0.931} & 0.831 & 0.764 & 0.439 & 0.844 \\
+$\beta$-VAE & 0.962 & 0.863 & \textbf{0.880} & 0.809 & 0.251 & \textbf{0.877} \\
+Deep SVDD & 0.957 & 0.889 & 0.855 & 0.730 & 0.402 & 0.849 \\
+RealNVP flow & 0.933 & 0.903 & 0.853 & 0.823 & 0.285 & 0.854 \\
+Masked Tab-Transformer & 0.930 & 0.859 & 0.861 & 0.726 & 0.369 & 0.856 \\
+PCA reconstruction & 0.955 & 0.798 & 0.861 & 0.815 & 0.417 & 0.861 \\
+Local Outlier Factor & 0.865 & 0.825 & 0.870 & 0.642 & \textbf{0.529} & 0.867 \\
+Isolation Forest & 0.949 & 0.781 & 0.811 & 0.870 & 0.282 & 0.808 \\
+HBOS & 0.945 & 0.674 & 0.724 & 0.853 & 0.293 & 0.722 \\
+ECOD & 0.952 & 0.588 & 0.731 & \textbf{0.903} & 0.329 & 0.734 \\
+One-Class SVM & 0.886 & 0.590 & 0.789 & 0.840 & 0.439 & 0.794 \\
+COPOD & 0.949 & 0.550 & 0.719 & 0.897 & 0.290 & 0.722 \\
 \midrule
-Ensemble (all) & 0.961 & 0.874 \\
-Ensemble (diverse 5) & 0.960 & 0.816 \\
+Ensemble (all) & 0.961 & 0.897 & 0.877 & 0.872 & 0.328 & 0.878 \\
+Ensemble (diverse 5) & 0.960 & 0.920 & 0.852 & 0.821 & 0.327 & 0.857 \\
 \bottomrule
 \end{tabular}

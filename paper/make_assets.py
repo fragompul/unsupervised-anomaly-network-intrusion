@@ -141,7 +141,7 @@ if c:
                     ax.plot([100 * r["rho"] for r in rs], [r["roc"] for r in rs], ls, color=COL[det], lw=1.4,
                             label=title(det) + (" + CTR" if suffix else "") if d == dsets[0] else None)  # fmt: skip
         ax.set_title(DS[d])
-        ax.set_xlabel(r"contamination $\rho$ (\%)")
+        ax.set_xlabel(r"contamination $\rho$ (%)")
         ax.axhline(0.5, color="0.6", lw=0.6, ls=":")
     axes[0].set_ylabel("ROC-AUC")
     fig.legend(loc="lower center", ncol=4, fontsize=6.5, frameon=False, bbox_to_anchor=(0.5, -0.17))
@@ -154,6 +154,11 @@ if c:
         macro("ctrGainFivePts", f"{100 * np.mean([g['gain'] for g in gains]):+.1f}")
         pos = [g for g in gains if g["gain"] > 0]
         macro("ctrWinFraction", f"{len(pos)}/{len(gains)}")
+    for name, rho in (("Zero", 0.0), ("Two", 0.02), ("Ten", 0.10), ("Twenty", 0.20)):
+        gg = [g for g in c["ctr_gain"] if abs(g["rho"] - rho) < 1e-9 and g["detector"].endswith("+ctr0.1")]
+        if gg:
+            macro(f"ctrGain{name}Pts", f"{100 * np.mean([g['gain'] for g in gg]):+.1f}")
+            macro(f"ctrWin{name}", f"{sum(g['gain'] > 0 for g in gg)}/{len(gg)}")
     deg = c["degradation"]
     if deg:
         macro("meanDropFivePts", f"{100 * np.mean([d['drop'] for d in deg]):.1f}")
@@ -196,7 +201,7 @@ if d:
     for i in range(M.shape[0]):
         for j in range(4):
             a1.text(j, i, f"{100 * M[i, j]:.1f}", ha="center", va="center", fontsize=5.8, color="white" if M[i, j] > 0.05 else "black")  # fmt: skip
-    a1.set_title(r"realized FPR (\%), nominal 1\%", fontsize=8)
+    a1.set_title("realized FPR (%), nominal 1%", fontsize=8)
     pts = [(r["psi_benign"], r["fpr_a1"], r["detector"]) for r in d["table"] if not r["detector"].startswith("ens_") and r["fpr_a1"] > 0]  # fmt: skip
     a2.scatter([max(p[0], 1e-3) for p in pts], [p[1] for p in pts], s=9, c=[COL.get(p[2], "0.4") for p in pts], alpha=0.8)
     a2.set(xscale="log", yscale="log", xlabel="PSI of benign scores (no labels)", ylabel="realized FPR")
