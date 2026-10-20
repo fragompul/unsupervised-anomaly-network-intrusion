@@ -1,3 +1,31 @@
+# Noctua architecture (v0.2)
+
+```mermaid
+flowchart LR
+    D[NSL-KDD / UNSW-NB15 / CIC-IDS2017<br/>verified downloads] --> P[data.* loaders<br/>signed log1p, clip, harmonized view]
+    P --> R[protocol.trainsets<br/>clean / natural / injected + calibration slice]
+    R --> Z[detectors.*<br/>15 detectors + CTR wrapper]
+    Z --> C[(results/scores/*.npz<br/>raw scores per cell)]
+    C --> A[protocol.analysis<br/>metrics, conformal, stats, drift, transfer]
+    A --> J[results/analysis/summary.json]
+    C --> E[export<br/>quantized binaries, AE weights, replay]
+    J --> E
+    E --> W[app/public/data]
+    W --> UI[React + WebGL app<br/>GitHub Pages]
+    W --> API[FastAPI<br/>optional]
+```
+
+* **Compute and analysis are decoupled.** Experiment cells only store raw scores; every reported
+  number is recomputed by `protocol.analysis`.
+* **The web app is static.** Everything it shows is exported once; the playground re-implements the
+  autoencoder forward pass in TypeScript and is unit-tested against the PyTorch model.
+* **Legacy.** The original NSL-KDD pipeline (`ids_anomaly.pipeline`, Optuna, clustering,
+  `dashboard/` Bokeh server) is preserved and documented below.
+
+---
+
+# Legacy pipeline architecture
+
 # Architecture
 
 ## Package layout
@@ -78,7 +106,7 @@ instantaneous, so the 3D-to-2D projection runs entirely in the browser via `Cust
 data already sitting in the `ColumnDataSource`. Switching embeddings, recoloring, or moving the
 anomaly threshold is infrequent enough that a server round-trip (recomputing NumPy arrays in
 Python) is simpler to reason about and plenty fast. See
-[dashboard/projection.py](../dashboard/projection.py) for the shared Python/JS projection math.
+[dashboard/projection.py](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/blob/main/dashboard/projection.py) for the shared Python/JS projection math.
 
 ## Visual design
 

@@ -1,0 +1,7 @@
+services:
+  noctua:
+    build: .
+    image: noctua:0.2.0
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

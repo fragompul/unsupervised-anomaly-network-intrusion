@@ -1,3 +1,3 @@
-"""Unsupervised network intrusion detection: reduction, clustering and anomaly benchmark."""
+"""Noctua: unsupervised network intrusion detection, benchmarked under drift, contamination and shift."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
