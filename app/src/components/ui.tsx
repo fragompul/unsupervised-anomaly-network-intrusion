@@ -46,7 +46,7 @@ export function Segmented<T extends string>({
   label?: string
 }) {
   return (
-    <div role="tablist" aria-label={label} className="relative inline-flex rounded-[12px] border border-line bg-white/[0.025] p-[3px]">
+    <div role="tablist" aria-label={label} className="no-scrollbar relative inline-flex max-w-full overflow-x-auto rounded-[12px] border border-line bg-white/[0.025] p-[3px]">
       {options.map((o) => {
         const active = o.value === value
         return (

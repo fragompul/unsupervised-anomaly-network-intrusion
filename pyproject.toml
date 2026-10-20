@@ -5,7 +5,7 @@ description = "Noctua: a reproducible research benchmark for unsupervised networ
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Fran Gomez" }]
+authors = [{ name = "Francisco Javier Gómez Pulido" }]
 
 dependencies = [
     "numpy>=1.26",

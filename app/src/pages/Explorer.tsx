@@ -227,7 +227,7 @@ export default function Explorer() {
       )}
 
       {/* small-screen notice */}
-      <div className="absolute inset-x-4 top-[72px] z-10 lg:hidden">
+      <div className="absolute inset-x-4 top-[104px] z-10 md:top-[72px] lg:hidden">
         <div className="glass p-4 text-sm text-muted">
           The explorer’s control panels are designed for larger screens. <Badge color="#8b7bff">Tip</Badge> Use the 3D view directly, or open this page on desktop.
         </div>

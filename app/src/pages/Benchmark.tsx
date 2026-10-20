@@ -13,7 +13,7 @@ import type { MainRow } from '../lib/types'
 type Metric = 'roc' | 'pr' | 'tpr_at_1pct_fpr' | 'a5_f1'
 const METRICS: { value: Metric; label: string; hint: string }[] = [
   { value: 'roc', label: 'ROC-AUC', hint: 'Threshold-free ranking quality' },
-  { value: 'pr', label: 'PR-AUC', hint: 'Precision–recall, sensitive to prevalence' },
+  { value: 'pr', label: 'PR-AUC', hint: 'Precision-recall, sensitive to prevalence' },
   { value: 'tpr_at_1pct_fpr', label: 'TPR @ 1% FPR', hint: 'Recall at the strictest alarm budget' },
   { value: 'a5_f1', label: 'F1 @ α=5%', hint: 'Conformal threshold, fixed before seeing test data' },
 ]
@@ -93,17 +93,17 @@ export default function Benchmark() {
           </table>
         </div>
         <p className="mt-3 text-xs leading-relaxed text-faint">
-          FPR @ α=1% is the <em>honesty check</em>: a conformal detector calibrated on clean normal flows promises ≤ 1% false alarms on exchangeable traffic. Red means the promise broke on this test split — that is distribution shift, not noise.
+          FPR @ α=1% is the <em>honesty check</em>: a conformal detector calibrated on clean normal flows promises ≤ 1% false alarms on exchangeable traffic. Red means the promise broke on this test split. That is distribution shift, not noise.
         </p>
       </Card>
 
-      <div className="mb-6 grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+      <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
         <Card className="p-6">
           <SectionTitle hint={stats ? `Friedman χ² = ${stats.statistic.toFixed(1)}, p ${stats.p < 1e-4 ? '< 10⁻⁴' : '= ' + stats.p.toFixed(4)} · ${stats.n_blocks} blocks (dataset × regime × seed)` : undefined}>Critical-difference diagram · ROC-AUC</SectionTitle>
           {stats ? (
             <>
               <CDDiagram ranks={Object.fromEntries(Object.entries(stats.mean_ranks).filter(([id]) => showEns || !id.startsWith('ens_')))} cd={stats.cd} groups={stats.cd_groups} title={T} family={familyOfId} />
-              <p className="mt-2 text-xs leading-relaxed text-faint">Lower rank is better. Methods joined by a violet bar are <em>not</em> significantly different (Nemenyi, α = 0.05). Seeds are treated as replicates, which is optimistic — see the paper for the dataset-level analysis.</p>
+              <p className="mt-2 text-xs leading-relaxed text-faint">Lower rank is better. Methods joined by a violet bar are <em>not</em> significantly different (Nemenyi, α = 0.05). Seeds are treated as replicates, which is optimistic; see the paper for the dataset-level analysis.</p>
             </>
           ) : <Empty>Not enough blocks for a Friedman test yet.</Empty>}
         </Card>
@@ -119,17 +119,17 @@ export default function Benchmark() {
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-faint">Reference: <span className="text-text">{stats ? T(main.stats.best_by_rank ?? '') : '—'}</span>.</p>
+          <p className="mt-2 text-xs text-faint">Reference: <span className="text-text">{stats ? T(main.stats.best_by_rank ?? '') : 'n/a'}</span>.</p>
         </Card>
       </div>
 
-      <div className="mb-6 grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+      <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
         <Card className="p-6">
           <SectionTitle hint="Share of each attack family flagged at α = 5% (calibrated on clean normals)">Where each detector goes blind</SectionTitle>
           {cats.cols.length ? (
             <Heatmap rows={cats.rowsIds} cols={cats.cols} values={cats.values} rowLabel={T} colLabel={(c) => CATEGORY_LABEL(c)} color={(v) => rampCss(Math.min(1, v * 0.95))} format={(v) => `${Math.round(v * 100)}`} labelW={150} cellH={26} textColor={(v) => (v > 0.7 ? '#10131f' : 'rgba(255,255,255,0.9)')} />
           ) : <Empty>No category data.</Empty>}
-          <p className="mt-2 text-xs text-faint">Cells show recall %. The <em>normal</em> column is the false-positive rate — it should stay near 5%.</p>
+          <p className="mt-2 text-xs text-faint">Cells show recall %. The <em>normal</em> column is the false-positive rate and should stay near 5%.</p>
         </Card>
         <Card className="p-6">
           <SectionTitle hint="Scoring latency per 1,000 flows (log scale, CPU)">Accuracy vs. cost</SectionTitle>
@@ -174,7 +174,7 @@ function LeaderRow({ r, i, metric, scale, title, family }: { r: MainRow; i: numb
       <td className="bg-white/[0.02] py-2 text-right num group-hover:bg-white/[0.05]" style={{ color: broken ? '#fb7185' : '#8f98b3' }}>{fmt.pct(r.a1_fpr, 2)}</td>
       <td className="bg-white/[0.02] py-2 text-right num text-muted group-hover:bg-white/[0.05]">{fmt.pct(r.a5_tpr, 1)}</td>
       <td className="bg-white/[0.02] py-2 text-right num text-muted group-hover:bg-white/[0.05]">{fmt.secs(r.fit_s)}</td>
-      <td className="rounded-r-lg bg-white/[0.02] py-2 pr-3 text-right num text-muted group-hover:bg-white/[0.05]">{r.score_ms_per_1k != null ? (r.score_ms_per_1k < 1 ? r.score_ms_per_1k.toFixed(2) : r.score_ms_per_1k.toFixed(1)) : '—'}</td>
+      <td className="rounded-r-lg bg-white/[0.02] py-2 pr-3 text-right num text-muted group-hover:bg-white/[0.05]">{r.score_ms_per_1k != null ? (r.score_ms_per_1k < 1 ? r.score_ms_per_1k.toFixed(2) : r.score_ms_per_1k.toFixed(1)) : 'n/a'}</td>
     </motion.tr>
   )
 }

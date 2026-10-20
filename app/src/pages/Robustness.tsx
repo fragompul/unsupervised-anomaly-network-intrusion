@@ -24,7 +24,7 @@ export default function Robustness() {
   return (
     <div className="mx-auto max-w-[1500px] px-6 pb-24 pt-28">
       <PageHeader eyebrow="Robustness lab" title={<>Three ways the textbook setting <span className="grad-text">stops being true.</span></>}>
-        Unsupervised detectors assume a clean training window, stationary traffic and the same network at deployment. Each experiment below removes one of those assumptions and measures what survives — including the conformal false-positive guarantee.
+        Unsupervised detectors assume a clean training window, stationary traffic and the same network at deployment. Each experiment below removes one of those assumptions and measures what survives, including the conformal false-positive guarantee.
       </PageHeader>
       {!summary ? <Skeleton className="h-96" /> : (
         <div className="space-y-16">
@@ -57,7 +57,7 @@ function Contamination() {
   const [showCtr, setShowCtr] = useState(true)
   const [active, setActive] = useState<string[]>(['ae', 'knn', 'iforest', 'flow'])
   const dataset = ds || datasets[0] || ''
-  if (!c || !datasets.length) return <section><SectionHead id="contamination" n="1" title="Hidden attacks in the training window" text="Attacks are injected into the normal training base at an exact rate ρ — the model never sees a label." /><Empty>Contamination results are not available yet.</Empty></section>
+  if (!c || !datasets.length) return <section><SectionHead id="contamination" n="1" title="Hidden attacks in the training window" text="Attacks are injected into the normal training base at an exact rate ρ. The model never sees a label." /><Empty>Contamination results are not available yet.</Empty></section>
 
   const rhos = Array.from(new Set(c.table.filter((r) => r.dataset === dataset).map((r) => r.rho))).sort((a, b) => a - b)
   const rowsOf = (id: string) => c.table.filter((r) => r.dataset === dataset && r.detector === id).sort((a, b) => a.rho - b.rho)
@@ -77,12 +77,12 @@ function Contamination() {
 
   return (
     <section>
-      <SectionHead id="contamination" n="1" title="Hidden attacks in the training window" text="Attacks are injected into the normal training base at an exact rate ρ — the model never sees a label. Reconstruction and density methods learn the injected attack as ‘normal’, and the damage is steep. Consensus-Trimmed Refit (CTR) screens the training set with three independent detectors before fitting." />
+      <SectionHead id="contamination" n="1" title="Hidden attacks in the training window" text="Attacks are injected into the normal training base at an exact rate ρ. The model never sees a label. Reconstruction and density methods learn the injected attack as ‘normal’, and the damage is steep. Consensus-Trimmed Refit (CTR) screens the training set with three independent detectors before fitting." />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Segmented label="cds" value={dataset} onChange={setDs} options={datasets.map((d) => ({ value: d, label: DATASET_SHORT[d] ?? d }))} />
         <label className="flex cursor-pointer items-center gap-2 text-[13px] text-muted"><input type="checkbox" className="accent-violet" checked={showCtr} onChange={(e) => setShowCtr(e.target.checked)} /> Overlay CTR (dashed)</label>
       </div>
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Card className="p-6">
           <div className="mb-3 flex flex-wrap gap-1.5">
             {SUBSET.map((id) => {
@@ -154,8 +154,8 @@ function Drift() {
 
   return (
     <section>
-      <SectionHead id="drift" n="2" title="A week of drift" text="Fit on Monday’s attack-free CIC-IDS2017 traffic and calibrate a conformal threshold on held-out Monday flows (nominal false-positive rate 1%). Then evaluate Tuesday to Friday. Drift is not a smooth decay: each day introduces its own benign services, so the guarantee breaks on some days and holds on others — and different detectors break on different days." />
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+      <SectionHead id="drift" n="2" title="A week of drift" text="Fit on Monday’s attack-free CIC-IDS2017 traffic and calibrate a conformal threshold on held-out Monday flows (nominal false-positive rate 1%). Then evaluate Tuesday to Friday. Drift is not a smooth decay: each day introduces its own benign services, so the guarantee breaks on some days and holds on others, and different detectors break on different days." />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Card className="p-6">
           <SectionTitle hint="Realized false-positive rate on benign flows · nominal 1%">Calibration decay by day</SectionTitle>
           <Heatmap rows={ordered} cols={days} values={fprVals} rowLabel={(id) => detTitle(id, summary?.titles)} color={(v) => rampCss(Math.min(1, Math.log10(Math.max(v, 0.002) / 0.002) / 2.2))} format={(v) => `${(v * 100).toFixed(v < 0.01 ? 2 : 1)}%`} cellH={26} labelW={150} textColor={(v) => (v > 0.1 ? '#10131f' : 'rgba(255,255,255,0.92)')} />
@@ -169,8 +169,8 @@ function Drift() {
             {(d.drift_alarms ?? [alarm]).map((a) => (
               <div key={a.threshold_psi} className="flex items-center gap-2 text-xs">
                 <Badge color="#f5b84b">PSI ≥ {a.threshold_psi}</Badge>
-                <span className="text-muted">precision</span><span className="num text-text">{a.precision != null ? fmt.pct(a.precision, 0) : '—'}</span>
-                <span className="ml-2 text-muted">recall</span><span className="num text-text">{a.recall != null ? fmt.pct(a.recall, 0) : '—'}</span>
+                <span className="text-muted">precision</span><span className="num text-text">{a.precision != null ? fmt.pct(a.precision, 0) : 'n/a'}</span>
+                <span className="ml-2 text-muted">recall</span><span className="num text-text">{a.recall != null ? fmt.pct(a.recall, 0) : 'n/a'}</span>
               </div>
             ))}
           </div>
@@ -235,7 +235,7 @@ function Calibration() {
   const options = Array.from(new Set(main.coverage.map((c) => c.detector))).map((id) => ({ value: id, label: detTitle(id, summary?.titles) }))
   return (
     <section>
-      <SectionHead id="calibration" n="4" title="Does the conformal guarantee hold?" text="A split-conformal detector promises that at nominal level α, at most a fraction α of normal flows are flagged — for any detector, with no distributional assumptions, as long as calibration and test traffic are exchangeable. The reliability diagram shows exactly where that assumption fails: on or below the diagonal is a kept promise." />
+      <SectionHead id="calibration" n="4" title="Does the conformal guarantee hold?" text="A split-conformal detector promises that at nominal level α, at most a fraction α of normal flows are flagged, for any detector, with no distributional assumptions, as long as calibration and test traffic are exchangeable. The reliability diagram shows exactly where that assumption fails: on or below the diagonal is a kept promise." />
       <Card className="p-6">
         <div className="mb-4 flex flex-wrap items-end gap-4">
           <Select className="w-56" label="Detector" value={det} onChange={setDet} options={options} />

@@ -1,4 +1,4 @@
-# Noctua — Roadmap & Progress
+# Noctua: roadmap and progress
 
 Living tracker. Updated at the end of every phase (each phase = one branch + PR into `main`).
 

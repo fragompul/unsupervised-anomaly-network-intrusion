@@ -21,7 +21,7 @@ cd app && npm install && npm run dev`
 
 const CONTRIBUTIONS = [
   { t: 'A protocol, not a leaderboard', d: 'Fifteen unsupervised detectors on NSL-KDD, UNSW-NB15 and CIC-IDS2017 under clean and natural training, with seeds, bootstrap intervals, Friedman/Nemenyi tests and Holm-corrected comparisons.' },
-  { t: 'Conformal guarantees, tested to breaking', d: 'Split-conformal p-values give any detector a finite-sample false-positive bound — and a way to see it fail. Averaged p-values merge heterogeneous detectors without losing validity.' },
+  { t: 'Conformal guarantees, tested to breaking', d: 'Split-conformal p-values give any detector a finite-sample false-positive bound, and a way to see it fail. Averaged p-values merge heterogeneous detectors without losing validity.' },
   { t: 'Consensus-Trimmed Refit', d: 'A label-free defence against training contamination: three independent screeners vote which rows to drop before the base detector is fitted. Ablations over trim level, single screeners and an oracle trim show where it helps, what it costs on clean data, and why the committee guards against a bad screener.' },
   { t: 'Drift and transfer, measured', d: 'A week of real timestamps and a two-dataset harmonized feature space quantify how fast calibration decays, and show that a label-free PSI alarm anticipates it.' },
   { t: 'Explanations with a faithfulness test', d: 'Exact per-feature reconstruction attributions, checked by deletion curves and by whether attribution clusters recover attack families.' },
@@ -39,7 +39,7 @@ export default function About() {
   return (
     <div className="mx-auto max-w-[1100px] px-6 pb-24 pt-28">
       <PageHeader eyebrow="Paper & method" title={<>Unsupervised intrusion detection <span className="grad-text">under pressure.</span></>}>
-        Noctua is the interactive companion of a research study on how unsupervised network intrusion detectors behave when the textbook assumptions — a clean training window, stationary traffic, the same network at deployment — stop being true.
+        Noctua is the interactive companion of a research study on how unsupervised network intrusion detectors behave when the textbook assumptions (a clean training window, stationary traffic, the same network at deployment) stop being true.
       </PageHeader>
 
       <div className="mb-10 flex flex-wrap gap-3">
