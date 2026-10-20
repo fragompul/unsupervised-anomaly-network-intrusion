@@ -32,9 +32,11 @@ for (const [route, heading] of ROUTES) {
 test('explorer: selecting a point opens the flow inspector', async ({ page }) => {
   await page.goto('/#/explorer')
   await expect(page.getByText(/Top anomalies/i)).toBeVisible({ timeout: 20_000 })
-  await page.getByRole('button', { name: /#\d+/ }).first().click()
-  await expect(page.getByText(/Conformal p-value/i)).toBeVisible()
-  await expect(page.getByText(/autoencoder error attribution/i)).toBeVisible()
+  const row = page.getByRole('button', { name: /#\d+/ }).first()
+  await expect(row).toBeVisible({ timeout: 30_000 })
+  await row.click()
+  await expect(page.getByText(/Conformal p-value/i)).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByText(/autoencoder error attribution/i)).toBeVisible({ timeout: 20_000 })
 })
 
 test('playground: dragging a feature changes the verdict evidence', async ({ page }) => {

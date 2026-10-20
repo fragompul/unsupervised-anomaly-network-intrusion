@@ -153,7 +153,7 @@ def analyze_main(root: Path) -> dict[str, Any] | None:
     summary: dict[str, Any] = {"table": [], "stats": {}, "coverage": [], "categories": []}
     keys = ["dataset", "regime", "detector"]
     for key, g in df.groupby(keys):
-        entry = dict(zip(keys, key, strict=True))
+        entry: dict[str, Any] = dict(zip(keys, key, strict=True))
         for metric in ("roc", "pr", "tpr_at_1pct_fpr", "a1_fpr", "a1_tpr", "a1_f1", "a5_fpr", "a5_tpr", "a5_f1", "fit_s", "score_ms_per_1k"):
             if metric in g and g[metric].notna().any():
                 vals = g[metric].dropna().to_numpy()
@@ -344,12 +344,12 @@ def analyze_transfer(root: Path) -> dict[str, Any] | None:
     )  # fmt: skip
     agg["roc_std"] = agg["roc_std"].fillna(0.0)
     inds = agg[agg.source == agg.target].set_index(["target", "detector"])["roc"]
-    ret = []
-    for r in agg[agg.source != agg.target].itertuples():
-        base = inds.get((r.target, r.detector))
-        ret.append({"source": r.source, "target": r.target, "scaler": r.scaler, "detector": r.detector,
-                    "roc": r.roc, "in_dataset_roc": None if base is None else float(base),
-                    "retention": None if base is None else float(r.roc / base)})  # fmt: skip
+    ret: list[dict[str, Any]] = []
+    for row in agg[agg.source != agg.target].itertuples():
+        base = inds.get((row.target, row.detector))
+        ret.append({"source": row.source, "target": row.target, "scaler": row.scaler, "detector": row.detector,
+                    "roc": row.roc, "in_dataset_roc": None if base is None else float(base),
+                    "retention": None if base is None else float(row.roc / base)})  # fmt: skip
     return {"table": json.loads(agg.round(5).to_json(orient="records")), "retention": ret}
 
 
