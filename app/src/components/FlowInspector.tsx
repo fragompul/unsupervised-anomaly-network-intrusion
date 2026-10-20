@@ -60,7 +60,7 @@ export function FlowInspector({ ds, index, detector, alpha }: { ds: DatasetData;
       </section>
 
       <section>
-        <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">Why — autoencoder error attribution</h3>
+        <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">Why: autoencoder error attribution</h3>
         <div className="space-y-2">
           {attrs.map((a, r) => (
             <div key={r}>

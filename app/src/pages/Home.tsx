@@ -16,9 +16,9 @@ function Counter({ value, suffix = '', decimals = 0 }: { value: number; suffix?:
 
 const FEATURES = [
   { to: '/explorer', icon: Box, title: '3D Explorer', text: 'Fly through 36k real flows in WebGL. Morph PCA into UMAP, flag by false-positive budget, and open any flow to see why it was flagged.', color: '#8b7bff' },
-  { to: '/benchmark', icon: BarChart3, title: 'Benchmark', text: 'Fifteen detectors, five seeds, critical-difference diagrams and bootstrap intervals — no single-number leaderboard.', color: '#22d3ee' },
-  { to: '/compare', icon: GitCompare, title: 'Compare', text: 'Put any two detectors head to head: ROC, precision–recall, and exactly which flows one catches and the other misses.', color: '#34d399' },
-  { to: '/robustness', icon: FlaskConical, title: 'Robustness lab', text: 'Hidden attacks in training, a week of drift, a new network. See which guarantees survive — and which break.', color: '#f5b84b' },
+  { to: '/benchmark', icon: BarChart3, title: 'Benchmark', text: 'Fifteen detectors, five seeds, critical-difference diagrams and bootstrap intervals. No single-number leaderboard.', color: '#22d3ee' },
+  { to: '/compare', icon: GitCompare, title: 'Compare', text: 'Put any two detectors head to head: ROC, precision-recall, and exactly which flows one catches and the other misses.', color: '#34d399' },
+  { to: '/robustness', icon: FlaskConical, title: 'Robustness lab', text: 'Hidden attacks in training, a week of drift, a new network. See which guarantees survive, and which break.', color: '#f5b84b' },
   { to: '/replay', icon: Activity, title: 'Live replay', text: 'Replay four days of traffic as a stream. Watch calibration decay and a label-free drift alarm fire before the false alarms do.', color: '#fb7185' },
   { to: '/playground', icon: SlidersHorizontal, title: 'Playground', text: 'Drag features and score a synthetic flow with the autoencoder running entirely in your browser.', color: '#a3e635' },
 ]
@@ -43,7 +43,7 @@ export default function Home() {
   return (
     <div>
       {/* ---------------------------------------------------------------- hero */}
-      <section className="relative isolate flex min-h-[100vh] items-center overflow-hidden pt-14">
+      <section className="relative isolate flex min-h-[100vh] items-center overflow-hidden pt-24 md:pt-14">
         <div className="pointer-events-none absolute inset-y-0 right-[-8%] -z-10 w-[78%] max-lg:right-0 max-lg:w-full max-lg:opacity-50">
           {ds && <PointCloud className="h-full w-full" ds={ds} embedding={ds.embeddings.umap ? 'umap' : 'pca'} colorBy="category" detectorIndex={0} alpha={0.05} hiddenCategories={[]} selected={null} ambient autoRotate rotateSpeed={0.35} pointScale={1.25} />}
         </div>
@@ -59,7 +59,7 @@ export default function Home() {
               <span className="grad-text">under pressure.</span>
             </h1>
             <p className="mt-6 max-w-[560px] text-[17px] leading-relaxed text-muted">
-              Noctua stress-tests {nDet} unsupervised detectors on three generations of intrusion data — with attacks hidden in training, a week of drift and a network it has never seen — and wraps them in conformal guarantees you can check.
+              Noctua stress-tests {nDet} unsupervised detectors on three generations of intrusion data. Attacks are hidden in training, traffic drifts over a week and the network changes, and every score comes with a conformal guarantee you can check.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link to="/explorer" className="focus-ring group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet to-[#5b8def] px-5 py-3 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5">
@@ -95,10 +95,10 @@ export default function Home() {
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">What breaks when the textbook assumptions do.</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Finding accent="#8b7bff" big={meanDrop != null ? `−${(meanDrop * 100).toFixed(0)} pts` : '—'} title="Hidden attacks poison the baseline" text="Average ROC-AUC lost when just 5% of the training window is silently malicious — reconstruction and density detectors learn the attack as normal." to="/robustness#contamination" />
-          <Finding accent="#a3e635" big={meanGain != null ? `${meanGain >= 0 ? '+' : '−'}${Math.abs(meanGain * 100).toFixed(1)} pts` : '—'} title="Consensus trimming wins it back" text="Consensus-Trimmed Refit — a label-free screen by three independent detectors — recovers part of the loss at 5% contamination." to="/robustness#contamination" />
-          <Finding accent="#fb7185" big={drift?.psi_fpr_spearman ? `ρ = ${drift.psi_fpr_spearman.rho.toFixed(2)}` : '—'} title="Drift leaves a label-free trace" text="Population stability of benign scores — computed with no labels — tracks how far the false-positive rate drifts above its conformal budget, day by day." to="/robustness#drift" />
-          <Finding accent="#f5b84b" big={meanRet != null ? fmt.pct(meanRet, 0) : '—'} title="Transfer keeps only a fraction" text="Mean share of in-dataset AUC retained when a detector trained on one capture is pointed at another network." to="/robustness#transfer" />
+          <Finding accent="#8b7bff" big={meanDrop != null ? `−${(meanDrop * 100).toFixed(0)} pts` : 'n/a'} title="Hidden attacks poison the baseline" text="Average ROC-AUC lost when just 5% of the training window is silently malicious. Reconstruction and density detectors learn the attack as normal." to="/robustness#contamination" />
+          <Finding accent="#a3e635" big={meanGain != null ? `${meanGain >= 0 ? '+' : '−'}${Math.abs(meanGain * 100).toFixed(1)} pts` : 'n/a'} title="Consensus trimming wins it back" text="Consensus-Trimmed Refit, a label-free screen by three independent detectors, recovers part of the loss at 5% contamination." to="/robustness#contamination" />
+          <Finding accent="#fb7185" big={drift?.psi_fpr_spearman ? `ρ = ${drift.psi_fpr_spearman.rho.toFixed(2)}` : 'n/a'} title="Drift leaves a label-free trace" text="Population stability of benign scores, computed with no labels, tracks how far the false-positive rate drifts above its conformal budget, day by day." to="/robustness#drift" />
+          <Finding accent="#f5b84b" big={meanRet != null ? fmt.pct(meanRet, 0) : 'n/a'} title="Transfer keeps only a fraction" text="Mean share of in-dataset AUC retained when a detector trained on one capture is pointed at another network." to="/robustness#transfer" />
         </div>
         {best && summary?.titles && (
           <p className="mt-6 text-sm text-muted">Best mean rank across 3 datasets × 2 training regimes × seeds: <span className="font-medium text-text">{summary.titles[best] ?? best}</span> (Friedman, Nemenyi CD). <Link to="/benchmark" className="text-violet-soft hover:underline">See the full critical-difference diagram →</Link></p>

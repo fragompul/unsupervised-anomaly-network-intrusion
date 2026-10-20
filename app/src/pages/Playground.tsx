@@ -93,7 +93,7 @@ export default function Playground() {
         ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
         <Card className="p-6">
           <div className="mb-1 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold">Feature sliders <span className="font-normal text-faint">· standardized z-scores</span></h2>
@@ -142,7 +142,7 @@ export default function Playground() {
             </div>
           </Card>
           <Card className="p-6">
-            <h2 className="mb-3 text-[15px] font-semibold">Why — top error features</h2>
+            <h2 className="mb-3 text-[15px] font-semibold">Why: top error features</h2>
             <div className="space-y-2.5">
               {top.map((t) => (
                 <div key={t.j}>
@@ -151,7 +151,7 @@ export default function Playground() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-xs text-faint">Same exact attribution as the Explorer. Scored with the exported autoencoder weights in JavaScript — identical to the PyTorch model to 3 decimals.</p>
+            <p className="mt-3 text-xs text-faint">Same exact attribution as the Explorer. Scored with the exported autoencoder weights in JavaScript, matching the PyTorch model to 3 decimals.</p>
           </Card>
         </div>
       </div>

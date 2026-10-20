@@ -136,7 +136,7 @@ function Stream({ replay }: { replay: ReplayData }) {
 
       <Card className="p-5"><Timeline replay={replay} flagged={flagged} pos={pos} onSeek={(k) => { posRef.current = k; setPos(k) }} /></Card>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_1fr_340px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1fr_340px]">
         <Card className="p-5">
           <div className="mb-1 flex items-center justify-between"><h3 className="text-[13px] font-semibold">Rolling false-positive rate</h3><Badge color={fprBroken ? '#fb7185' : '#34d399'}>{fprBroken ? 'guarantee broken' : 'within budget'}</Badge></div>
           <div className="num mb-2 text-3xl" style={{ color: fprBroken ? '#fb7185' : '#34d399' }}>{fmt.pct(r.fpr, 2)} <span className="text-sm text-faint">vs nominal {fmt.pct(alpha, 2)}</span></div>
@@ -166,7 +166,7 @@ function Stream({ replay }: { replay: ReplayData }) {
             {!feed.length && <div className="py-6 text-center text-xs text-faint">No alerts yet</div>}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3">
-            <div><div className="text-[10px] uppercase tracking-wider text-faint">Window recall</div><div className="num text-lg text-mint">{r.na ? fmt.pct(r.tpr, 0) : '—'}</div></div>
+            <div><div className="text-[10px] uppercase tracking-wider text-faint">Window recall</div><div className="num text-lg text-mint">{r.na ? fmt.pct(r.tpr, 0) : 'n/a'}</div></div>
             <div><div className="text-[10px] uppercase tracking-wider text-faint">Alerts / window</div><div className="num text-lg">{r.alerts}</div></div>
           </div>
         </Card>
@@ -258,7 +258,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-[1500px] px-6 pb-24 pt-28">
       <PageHeader eyebrow="Live replay" title={<>Watch the guarantee <span className="grad-text">break in real time.</span></>}>
-        Four days of traffic as a stream, scored against a threshold fixed on Monday. The false-positive rate leaves its budget on some days — and a label-free monitor sees it coming.
+        Four days of traffic as a stream, scored against a threshold fixed on Monday. The false-positive rate leaves its budget on some days, and a label-free monitor sees it coming.
       </PageHeader>
       {children}
     </div>

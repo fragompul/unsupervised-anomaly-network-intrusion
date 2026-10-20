@@ -60,17 +60,17 @@ export default function Compare() {
 
   return (
     <Shell>
-      <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_1fr_1fr_1.1fr]">
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr_1fr_1.1fr]">
         <Card className="p-4"><Select label="Dataset" value={key} onChange={setKey} options={manifest.datasets.map((d) => ({ value: d.key, label: DATASET_SHORT[d.key] ?? d.title }))} /></Card>
         <Card className="p-4" style={{ boxShadow: `inset 3px 0 0 ${A_COLOR}` }}><Select label="Detector A" value={a} onChange={setA} options={options} /></Card>
         <Card className="p-4" style={{ boxShadow: `inset 3px 0 0 ${B_COLOR}` }}><Select label="Detector B" value={b} onChange={setB} options={options} /></Card>
         <Card className="p-4"><Slider label="Flag at α" value={Math.log10(alpha)} min={-3} max={-0.7} step={0.01} display={`${(alpha * 100).toFixed(alpha < 0.01 ? 2 : 1)}%`} onChange={(v) => setAlpha(Math.pow(10, v))} /></Card>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.1fr]">
         <Card className="p-6">
           <div className="mb-2 flex items-center justify-between">
-            <SectionTitle>{curve === 'roc' ? 'ROC curve' : 'Precision–recall'} · full test set</SectionTitle>
+            <SectionTitle>{curve === 'roc' ? 'ROC curve' : 'Precision-recall'} · full test set</SectionTitle>
             <Segmented size="sm" label="curve" value={curve} onChange={setCurve} options={[{ value: 'roc', label: 'ROC' }, { value: 'pr', label: 'PR' }]} />
           </div>
           <LineChart
@@ -102,7 +102,7 @@ export default function Compare() {
       </div>
 
       {agreement && (
-        <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1.4fr]">
+        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.4fr]">
           <Card className="p-6">
             <SectionTitle hint={`${fmt.int(ds.n)} sampled flows`}>Who flags what</SectionTitle>
             <div className="mt-3 grid grid-cols-2 gap-3">
