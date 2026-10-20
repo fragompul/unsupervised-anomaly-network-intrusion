@@ -4,8 +4,8 @@ Living tracker. Updated at the end of every phase (each phase = one branch + PR 
 
 | # | Phase | Branch | Status |
 |---|-------|--------|--------|
-| 0 | Foundation: tooling, typing, pre-commit, CI matrix | `chore/foundation` | in progress |
-| 1 | Multi-dataset layer: NSL-KDD, UNSW-NB15, CIC-IDS2017 + harmonized feature space | `feat/multi-dataset` | todo |
+| 0 | Foundation: tooling, typing, pre-commit, CI matrix | `chore/foundation` | done (PR #1, CI green) |
+| 1 | Multi-dataset layer: NSL-KDD, UNSW-NB15, CIC-IDS2017 + harmonized feature space | `feat/multi-dataset` | done (see [datasets.md](datasets.md)) |
 | 2 | Detector zoo: VAE, normalizing flow, contrastive (NeuTraL-style), masked tabular transformer, PyOD baselines | `feat/detectors` | todo |
 | 3 | Research protocol: multi-seed, contamination sweep, drift, cross-dataset, conformal, stats | `feat/protocol` | todo |
 | 4 | Explainability + cost profiling | `feat/explain` | todo |

@@ -72,14 +72,7 @@ def _split_val(ds: Dataset, val_fraction: float = 0.15, seed: int = RANDOM_STATE
     idx = rng.permutation(n)
     n_val = int(n * val_fraction)
     val_idx, train_idx = idx[:n_val], idx[n_val:]
-    train = Dataset(
-        ds.X[train_idx], ds.is_attack[train_idx], ds.attack_category[train_idx],
-        ds.label[train_idx], ds.feature_names,
-    )
-    val = Dataset(
-        ds.X[val_idx], ds.is_attack[val_idx], ds.attack_category[val_idx],
-        ds.label[val_idx], ds.feature_names,
-    )
+    train, val = ds.subset(train_idx), ds.subset(val_idx)
     return train, val
 
 
