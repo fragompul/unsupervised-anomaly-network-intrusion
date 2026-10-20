@@ -125,7 +125,7 @@ python -m ids_anomaly.cli data                                  # verified downl
 python -m ids_anomaly.cli benchmark --experiment all --seeds 5 --workers 3
 python -m ids_anomaly.cli analyze                               # tables, statistics, conformal coverage
 python -m ids_anomaly.export                                    # artifacts for the web app
-python paper/make_assets.py && (cd paper && tectonic main.tex)  # figures, macros, PDF
+python paper/make_assets.py && (cd paper && latexmk -pdf main.tex)  # figures, macros, PDF
 ```
 
 A full run takes about 3 hours on a 10-core laptop, CPU only. Experiment cells are **resumable** and

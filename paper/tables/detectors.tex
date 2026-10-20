@@ -1,0 +1,21 @@
+\begin{tabular}{llllrr}
+\toprule
+Detector & Family & Fixed configuration & Ref. & Fit (s) & Score (ms/1k) \\
+\midrule
+Autoencoder & Reconstruction & MLP 128-64-$\lfloor d/8\rfloor$, MSE & -- & 10.1 & 0.6 \\
+Gaussian mixture & Density & 8 full-covariance components & -- & 2.8 & 1.6 \\
+kNN distance & Distance & mean distance to $k{=}10$ neighbours & -- & 0.0 & 93.4 \\
+NeuTraL AD & Self-supervised & $K{=}6$ learned transformations & \cite{qiu2021} & 45.7 & 7.2 \\
+$\beta$-VAE & Reconstruction & $\beta{=}0.5$, negative ELBO & \cite{kingma2014,higgins2017} & 10.1 & 0.5 \\
+Deep SVDD & Deep one-class & bias-free MLP, 10+30 epochs & \cite{ruff2018} & 6.0 & 0.1 \\
+RealNVP flow & Density & RealNVP, 6 couplings, 128 hidden & \cite{dinh2017} & 53.5 & 6.7 \\
+Masked Tab-Transformer & Self-supervised & 2-layer, 4-head, 30\% masking & \cite{gorishniy2021} & 155.8 & 985.8 \\
+PCA reconstruction & Reconstruction & 95\% variance retained & -- & 0.1 & 0.3 \\
+Local Outlier Factor & Distance & $k{=}20$, novelty mode & \cite{breunig2000} & 2.2 & 97.4 \\
+Isolation Forest & Tree & 200 trees, 256 samples/tree & \cite{liu2008} & 0.2 & 7.8 \\
+HBOS & Density & 20 histogram bins & \cite{goldstein2012} & 0.9 & 3.2 \\
+ECOD & Density & parameter-free ECDF tails & \cite{li2022} & 0.9 & 52.0 \\
+One-Class SVM & Kernel & RBF, $\nu{=}0.05$, $\le$8k rows & \cite{scholkopf2001} & 0.2 & 36.3 \\
+COPOD & Density & parameter-free copula tails & \cite{li2020} & 0.7 & 48.8 \\
+\bottomrule
+\end{tabular}

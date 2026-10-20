@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion'
+import { Check, ChevronDown } from 'lucide-react'
 import type { CSSProperties, ReactNode } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(' ')
 
@@ -90,29 +93,145 @@ export function Select({
   label?: string
   className?: string
 }) {
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  const [box, setBox] = useState<{ left: number; width: number; top?: number; bottom?: number; maxH: number } | null>(null)
+  const btn = useRef<HTMLButtonElement>(null)
+  const list = useRef<HTMLDivElement>(null)
+  const id = useId()
+  const selected = options.findIndex((o) => o.value === value)
+
+  // Options are rendered in order of first appearance of each group so the keyboard index matches the DOM.
   const groups = Array.from(new Set(options.map((o) => o.group ?? '')))
+  const ordered = groups.flatMap((g) => options.filter((o) => (o.group ?? '') === g))
+
+  const place = useCallback(() => {
+    const r = btn.current?.getBoundingClientRect()
+    if (!r) return
+    const below = window.innerHeight - r.bottom - 12
+    const above = r.top - 12
+    const up = below < 220 && above > below
+    setBox({ left: r.left, width: Math.max(r.width, 190), maxH: Math.min(360, up ? above : below), ...(up ? { bottom: window.innerHeight - r.top + 6 } : { top: r.bottom + 6 }) })
+  }, [])
+
+  const close = useCallback((refocus = true) => {
+    setOpen(false)
+    if (refocus) btn.current?.focus()
+  }, [])
+
+  const choose = (i: number) => {
+    onChange(ordered[i].value)
+    close()
+  }
+
+  useEffect(() => {
+    if (!open) return
+    place()
+    const outside = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (!list.current?.contains(t) && !btn.current?.contains(t)) close(false)
+    }
+    const away = (e: Event) => { if (!list.current?.contains(e.target as Node)) close(false) }
+    document.addEventListener('mousedown', outside)
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', away, true)
+    return () => {
+      document.removeEventListener('mousedown', outside)
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', away, true)
+    }
+  }, [open, place, close])
+
+  useEffect(() => {
+    if (open) list.current?.querySelector<HTMLElement>(`[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [open, active])
+
+  const openList = () => {
+    setActive(Math.max(0, ordered.findIndex((o) => o.value === value)))
+    setOpen(true)
+  }
+
+  const onKey = (e: React.KeyboardEvent) => {
+    if (!open) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) { e.preventDefault(); openList() }
+      return
+    }
+    if (e.key === 'Escape') { e.preventDefault(); close() }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => Math.min(ordered.length - 1, i + 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => Math.max(0, i - 1)) }
+    else if (e.key === 'Home') { e.preventDefault(); setActive(0) }
+    else if (e.key === 'End') { e.preventDefault(); setActive(ordered.length - 1) }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(active) }
+    else if (e.key === 'Tab') close(false)
+    else if (e.key.length === 1) {
+      const k = e.key.toLowerCase()
+      const n = ordered.findIndex((o, i) => i > active && o.label.toLowerCase().startsWith(k))
+      const m = n >= 0 ? n : ordered.findIndex((o) => o.label.toLowerCase().startsWith(k))
+      if (m >= 0) setActive(m)
+    }
+  }
+
+  let lastGroup: string | null = null
   return (
-    <label className={cx('block', className)}>
-      {label && <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-faint">{label}</span>}
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="focus-ring w-full appearance-none rounded-[11px] border border-line bg-white/[0.04] py-2 pl-3 pr-8 text-[13px] text-text transition-colors hover:bg-white/[0.07]"
+    <div className={cx('block', className)}>
+      {label && <span id={`${id}-l`} className="mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-faint">{label}</span>}
+      <button
+        ref={btn}
+        type="button"
+        role="combobox"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        aria-labelledby={label ? `${id}-l` : undefined}
+        onClick={() => (open ? close() : openList())}
+        onKeyDown={onKey}
+        className={cx(
+          'focus-ring flex w-full items-center justify-between gap-2 rounded-[11px] border bg-white/[0.04] py-2 pl-3 pr-2.5 text-left text-[13px] text-text transition-colors hover:bg-white/[0.07]',
+          open ? 'border-violet/60 bg-white/[0.07]' : 'border-line',
+        )}
+      >
+        <span className="truncate">{options[selected]?.label ?? ''}</span>
+        <ChevronDown size={15} className={cx('shrink-0 text-faint transition-transform duration-150', open && 'rotate-180 text-violet-soft')} />
+      </button>
+      {open && box && createPortal(
+        <div
+          ref={list}
+          id={`${id}-list`}
+          role="listbox"
+          onKeyDown={onKey}
+          style={{ position: 'fixed', left: box.left, width: box.width, top: box.top, bottom: box.bottom, maxHeight: box.maxH, zIndex: 100, colorScheme: 'dark' }}
+          className="overflow-y-auto rounded-[14px] border border-line-strong bg-[#0c1120]/95 p-1.5 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.85),0_0_0_1px_rgba(139,123,255,0.12)] backdrop-blur-xl"
         >
-          {groups.map((g) =>
-            g ? (
-              <optgroup key={g} label={g}>
-                {options.filter((o) => o.group === g).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </optgroup>
-            ) : (
-              options.filter((o) => !o.group).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)
-            ),
-          )}
-        </select>
-        <svg className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m6 8 4 4 4-4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      </div>
-    </label>
+          {ordered.map((o, i) => {
+            const g = o.group ?? ''
+            const header = g !== lastGroup && g !== ''
+            lastGroup = g
+            const isSel = o.value === value
+            return (
+              <div key={o.value}>
+                {header && <div className={cx('px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint', i > 0 ? 'mt-1.5 pt-2' : 'pt-1')}>{g}</div>}
+                <div
+                  role="option"
+                  aria-selected={isSel}
+                  data-i={i}
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => choose(i)}
+                  className={cx(
+                    'flex cursor-pointer items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-[13px] transition-colors',
+                    i === active ? 'bg-white/[0.09] text-white' : 'text-muted',
+                    isSel && 'text-white',
+                  )}
+                >
+                  <span className="truncate">{o.label}</span>
+                  {isSel && <Check size={14} className="shrink-0 text-violet-soft" />}
+                </div>
+              </div>
+            )
+          })}
+        </div>,
+        document.body,
+      )}
+    </div>
   )
 }
 
