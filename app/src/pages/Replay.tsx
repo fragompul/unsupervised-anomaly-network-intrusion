@@ -149,20 +149,19 @@ function Stream({ replay }: { replay: ReplayData }) {
         </Card>
         <Card className="p-5">
           <h3 className="mb-3 text-[13px] font-semibold">Recent alerts</h3>
-          <div className="space-y-1.5">
-            <AnimatePresence initial={false}>
-              {feed.map((k) => {
-                const atk = replay.attack[k] === 1
-                return (
-                  <motion.div key={k} layout initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-2.5 rounded-lg border border-line bg-white/[0.025] px-2.5 py-1.5 text-xs">
-                    <span className="h-2 w-2 rounded-full" style={{ background: atk ? '#fb7185' : '#8b7bff' }} />
-                    <span className="num text-muted">{clock(k)}</span>
-                    <span className="flex-1" />
-                    <Badge color={atk ? '#fb7185' : '#8b7bff'}>{atk ? 'true attack' : 'false alarm'}</Badge>
-                  </motion.div>
-                )
-              })}
-            </AnimatePresence>
+          {/* Fixed-height list: exit/layout animations here made the column grow without bound while playing. */}
+          <div className="relative h-[312px] space-y-1.5 overflow-hidden">
+            {feed.map((k) => {
+              const atk = replay.attack[k] === 1
+              return (
+                <div key={k} className="flex h-[30px] items-center gap-2.5 rounded-lg border border-line bg-white/[0.025] px-2.5 text-xs">
+                  <span className="h-2 w-2 rounded-full" style={{ background: atk ? '#fb7185' : '#8b7bff' }} />
+                  <span className="num text-muted">{clock(k)}</span>
+                  <span className="flex-1" />
+                  <Badge color={atk ? '#fb7185' : '#8b7bff'}>{atk ? 'true attack' : 'false alarm'}</Badge>
+                </div>
+              )
+            })}
             {!feed.length && <div className="py-6 text-center text-xs text-faint">No alerts yet</div>}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-3">
