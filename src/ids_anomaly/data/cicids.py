@@ -102,6 +102,7 @@ def load_cicids_frames(
     df = _load_frame(raw_dir)
     numeric = [c for c in df.columns if c not in ("timestamp", "day", "category", "label", "protocol")]
 
+    is_train: np.ndarray
     if split == "temporal":
         is_train = df["day"].isin(TRAIN_DAYS).to_numpy()
     elif split == "iid":
