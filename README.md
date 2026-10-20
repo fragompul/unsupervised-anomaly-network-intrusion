@@ -1,259 +1,149 @@
-# 🛡️ Unsupervised Network Intrusion Detection
+<div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+# 🦉 Noctua
+
+### Unsupervised network intrusion detection, under pressure.
+
+**15 detectors · 3 datasets · conformal guarantees · contamination, drift and shift — explored in a WebGL research lab.**
+
+[![CI](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/actions/workflows/ci.yml/badge.svg)](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/actions/workflows/ci.yml)
+[![App](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/actions/workflows/app.yml/badge.svg)](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/actions/workflows/app.yml)
+![Python](https://img.shields.io/badge/Python-3.10%E2%80%933.12-blue)
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
-![UMAP](https://img.shields.io/badge/UMAP-manifold_learning-9b59b6)
-![HDBSCAN](https://img.shields.io/badge/HDBSCAN-density_clustering-2c3e50)
-![Optuna](https://img.shields.io/badge/Optuna-HPO-00A3E0)
-![Bokeh](https://img.shields.io/badge/Bokeh-server_dashboard-e37e00)
-![CI](https://github.com/fragompul/unsupervised-anomaly-network-intrusion/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-> **An unsupervised, label-blind benchmark of network intrusion detection, comparing nine
-> methods across dimensionality reduction, clustering, and anomaly detection on the same data
-> and the same metrics, explored live through a 3D Bokeh dashboard.**
+**[Live app](https://fragompul.github.io/unsupervised-anomaly-network-intrusion/)** · **[Paper (PDF)](paper/main.pdf)** · **[Docs](https://fragompul.github.io/unsupervised-anomaly-network-intrusion/docs/)** · **[Protocol](docs/protocol.md)**
+
+![Noctua 3D explorer](docs/assets/app_explorer.png)
+
+</div>
 
 ---
 
-## 🎯 Executive Summary
+## Why this exists
 
-Supervised intrusion detection has a labeling problem. Attack labels are scarce, attacks evolve
-faster than labeling pipelines can keep up, and a classifier trained on known signatures is, by
-construction, blind to the ones it has never seen. This project asks a harder question instead:
-**how well can you flag malicious network flows without ever showing a model a single attack
-label?**
+Unsupervised detectors are attractive for intrusion detection — labels are scarce and attacks evolve —
+but they are almost always evaluated on a **clean training window**, **stationary traffic** and **one
+network**. Noctua removes those assumptions one at a time and measures what survives, with
+**split-conformal calibration** turning every detector's score into a false-positive guarantee that
+is then tested until it breaks.
 
-It benchmarks the full unsupervised toolbox on [NSL-KDD](https://www.unb.ca/cic/datasets/nsl.html)
-network flow data: **PCA, UMAP, t-SNE and a custom autoencoder** for dimensionality reduction,
-**KMeans, Gaussian Mixtures and HDBSCAN** for clustering, and **Isolation Forest, One-Class SVM
-and Deep SVDD** for anomaly detection. Every method is tuned with **Optuna**, evaluated on
-identical train/test splits with identical metrics, and explored live through a **Bokeh server**
-dashboard with a genuinely rotatable 3D embedding view linked to an anomaly drill-down table.
+It started as an NSL-KDD benchmark and grew into a reproducible research protocol, a paper
+([`paper/`](paper/)) and an interactive lab ([`app/`](app/)).
 
-The problem is genuinely hard, not just unfamiliar. Reduction, clustering and anomaly detection
-each optimize a different objective, so there is no single "best" method, only trade-offs
-reported side by side (ROC-AUC, PR-AUC, F1, ARI/NMI, silhouette) instead of one leaderboard
-number. Attack categories are severely imbalanced, DoS floods are common and statistically loud
-while R2L/U2R attacks are rare and can look, feature-wise, close to normal sessions, which is
-exactly where the per-attack-category breakdown in [docs/results.md](docs/results.md) matters.
-And NSL-KDD mixes near-binary flags, bounded rate features and byte/duration counts spanning
-orders of magnitude, handled deliberately rather than left to a default scaler (see *Key
-Engineering Decisions* below).
+## What the experiments found
 
-Labels are used for exactly two things, both stated explicitly rather than left implicit:
-selecting hyperparameters on a held-out validation slice, and scoring the final test-split
-metrics. Every model is fit without ever seeing a label. See
-[docs/methodology.md](docs/methodology.md) for the full reasoning.
+All numbers are recomputed from raw scores (5 seeds; see [benchmark results](docs/benchmark_results.md)).
 
-## 🏗️ Architecture
+| | Finding |
+|---|---|
+| **Hidden attacks poison the baseline** | At just **5 % contamination** the training window costs **11.4 ROC-AUC points on average** (up to **36** for kNN). Reconstruction, density and distance models learn the attack as normal. |
+| **Consensus-Trimmed Refit (ours)** | A label-free screen by three independent detectors (Isolation Forest, ECOD, PCA) before fitting recovers **+5.4 points at ρ = 5 %**, improving **21 / 21** dataset–detector pairs; it costs **−2.5 points on clean data**, and its benefit fades at ρ ≥ 10 %. A single well-matched screener (ECOD) can match the committee; a poor one (PCA) hurts — the committee buys robustness, not dominance. |
+| **Calibration is only as good as exchangeability** | At a nominal 1 % false-positive budget, single detectors realize **2.1–4.9 %** even in-dataset. A *diverse* 5-detector conformal merge stays within budget (**0.2–1.7 %**) at **41–67 %** recall (α = 5 %); merging all 15, weak members included, is valid but nearly powerless on UNSW-NB15 (1.4 % recall). |
+| **Drift is not a smooth decay** | On CIC-IDS2017 a Monday-calibrated threshold realizes **1.6 %** FPR on Wednesday and **7.6 %** on Thursday (averaged over detectors); ECOD/COPOD/HBOS/Isolation Forest stay closest to budget, deep and density models break hardest. A **label-free PSI** of benign scores tracks it (Spearman ρ = 0.52); PSI ≥ 0.05 flags broken-guarantee cases with 75 % precision at 94 % recall. |
+| **Transfer is poor** | UNSW-NB15 ↔ CIC-IDS2017 on 18 aligned features: **0.695** (U→C) and **0.446** (C→U, below chance) AUC vs. 0.667 / 0.757 in-dataset, with realized FPR of **56 %** and **28 %** at a nominal 1 %. Per-domain standardization helps one direction and hurts the other. |
+| **Best single detector** | Autoencoder (mean rank 5.0, Friedman χ² = 85.6, Nemenyi CD = 3.92) — statistically tied with the nine next-ranked detectors (GMM, β-VAE, kNN, PCA, Deep SVDD, NeuTraL, LOF, flow, MTT). NeuTraL AD is best on UNSW-NB15 (0.931). The "natural" UNSW-NB15 split (68 % attacks) inverts most detectors (AUC < 0.5). |
+| **Explanations are faithful** | AE per-feature error is an exact decomposition of the score; deleting the top-3 attributed features removes **51 / 15 / 38 %** of it (NSL / UNSW / CIC) vs. 2 / 1 / 3 % for random features. |
+
+## The lab (web app)
+
+A static React 19 + WebGL app (deployable on GitHub Pages, no backend). Eight pages:
+
+| | |
+|---|---|
+| ![Explorer](docs/assets/app_explorer.png) | **3D Explorer.** 36k real flows in WebGL: morph PCA → UMAP, flag by false-positive budget, open any flow to see all 17 detectors' evidence and an exact feature attribution. |
+| ![Benchmark](docs/assets/app_benchmark.png) | **Benchmark.** Leaderboard with bootstrap CIs, critical-difference diagram, per-category recall heatmap, accuracy-vs-cost scatter, calibration-honesty column. |
+| ![Compare](docs/assets/app_compare.png) | **Compare.** Any two detectors: ROC/PR overlay, agreement table and a 3D *disagreement map*. |
+| ![Robustness](docs/assets/app_robustness.png) | **Robustness lab.** Contamination + CTR, drift heatmap and PSI alarm, transfer matrix, conformal reliability diagrams. |
+| ![Replay](docs/assets/app_replay.png) | **Live replay.** Four days of traffic as a stream: rolling FPR vs budget, a label-free drift alarm, alert feed. |
+| | **Playground.** Edit a flow's features and watch the verdict move — the autoencoder runs **in your browser**, verified against PyTorch to 3 decimals. |
+
+```bash
+cd app && npm install && npm run dev     # http://localhost:5173
+```
+
+## Quickstart (reproduce everything)
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev,api,paper,notebooks]"
+
+python -m ids_anomaly.cli data                                # verified downloads (SHA-256), no registration
+python -m ids_anomaly.cli benchmark --experiment all --seeds 5 --workers 3
+python -m ids_anomaly.cli analyze                             # tables, statistics, conformal coverage
+python -m ids_anomaly.export                                  # artifacts for the web app
+python paper/make_assets.py && (cd paper && tectonic main.tex)   # figures, macros, PDF
+```
+
+The full run takes about 3 h on a 10-core laptop (CPU only). Experiment cells are **resumable** and
+**fault-isolated**; compute and analysis are decoupled (cells store raw scores; every reported number
+is recomputed from them).
+
+Docker: `docker compose up` serves the app and the API on `localhost:8000`.
+
+## The protocol in one screen
 
 ```mermaid
 flowchart LR
-    A[NSL-KDD raw flows] --> B[preprocess.py<br/>log1p, scale, one-hot]
-    B --> C[train/val/test splits<br/>labels held out of X]
-    C --> D[PCA, UMAP, Autoencoder]
-    D --> E[KMeans, GMM, HDBSCAN<br/>per embedding]
-    C --> F[Isolation Forest,<br/>One-Class SVM, Deep SVDD]
-    E --> G[results/metrics/results.json]
-    F --> G
-    D --> H[results/embeddings_test.npz]
-    G --> I[Bokeh server dashboard<br/>3D explorer + anomaly table]
-    H --> I
+    D[3 datasets<br/>verified downloads] --> R[Regimes<br/>clean · natural · injected ρ]
+    R --> Z[15 detectors<br/>fit without labels]
+    Z --> C[Conformal layer<br/>p-values · merged ensembles]
+    C --> E[E1 benchmark · E2 contamination<br/>E3 drift · E4 shift]
+    E --> A[Analysis<br/>CIs · Friedman/Nemenyi · PSI]
+    A --> UI[Web lab + paper]
 ```
 
-Every Optuna study is scored on a labeled validation slice carved from *training* data only, the
-test split stays untouched until final scoring. See
-[docs/architecture.md](docs/architecture.md) for the full data-flow diagram, the
-fully-unsupervised vs. semi-supervised training regime split, and the dashboard's client/server
-callback architecture.
+* **Datasets:** NSL-KDD (2009), UNSW-NB15 (2015), CIC-IDS2017 (temporal split: train Mon–Tue, test Wed–Fri).
+  All three are obtainable without a registration form ([details](docs/datasets.md)).
+* **Detectors:** Isolation Forest, One-Class SVM, PCA, GMM, kNN, LOF, ECOD, COPOD, HBOS, Autoencoder,
+  Deep SVDD, β-VAE, RealNVP flow, NeuTraL AD, masked tab-transformer — one interface, fixed configs (no label-tuned hyper-parameters).
+* **Calibration:** a held-out clean slice gives conformal p-values with a finite-sample FPR bound; averaged p-values merge detectors validly.
+* **Statistics:** bootstrap CIs, Friedman + Nemenyi, Holm-corrected Wilcoxon.
 
-## 📊 Dashboard
-
-The dashboard is a genuine **Bokeh server** app (`bokeh serve`, not a static export): a rotatable
-3D embedding scatter, drag two sliders and the rotation runs entirely client-side via `CustomJS`
-for a responsive feel, linked to an anomaly drill-down table where box/lasso-selecting points
-filters the table and vice versa. It supports live switching between PCA, UMAP, Autoencoder and
-t-SNE embeddings, four independent anomaly scores, and an adjustable "flag top X%" threshold.
-
-A dark, custom-themed UI on top of that (`dashboard/theme.py` + a Jinja2 page template): a hand
-picked categorical palette per attack category, KPI cards computed live from the actual pipeline
-results, a compact styled hover tooltip (Bokeh's default stacks one tooltip per overlapping point,
-capped and restyled here rather than left at browser defaults), and every widget (selects, sliders,
-the results table) reskinned via Bokeh 3's per-model `stylesheets`, since a `Theme` only reaches
-plot-level models, not shadow-DOM widgets.
-
-![3D embedding explorer, UMAP embedding colored by attack category](docs/assets/dashboard_scatter.png)
-
-*The 3D scatter above is a static capture of the live view: 22,544 NSL-KDD test flows embedded via
-UMAP, colored by ground-truth attack category, rotatable and linked to the anomaly table in the
-running app. See Installation below to run it yourself.*
-
-## ⚙️ Installation & Usage
-
-**1. Clone and set up the environment:**
-
-```bash
-git clone https://github.com/fragompul/unsupervised-anomaly-network-intrusion.git
-cd unsupervised-anomaly-network-intrusion
-python -m venv .venv
-.venv/Scripts/activate   # .venv/bin/activate on Linux/Mac
-pip install -e ".[dev]"
-```
-
-**2. Run the full benchmark** (downloads NSL-KDD automatically, no account or API key needed,
-CPU-only and auto-detects CUDA if available):
-
-```bash
-python -m ids_anomaly.cli run --trials 25 -v
-```
-
-This writes `results/metrics/results.json` (every metric in `docs/results.md`) and
-`results/embeddings_test.npz` (what the dashboard reads). HPO trials run in parallel across your
-CPU cores automatically, pass `--jobs` to override.
-
-**3. Launch the dashboard:**
-
-```bash
-bokeh serve --show dashboard/app.py
-```
-
-**4. Run tests and lint:**
-
-```bash
-pytest --cov=ids_anomaly
-ruff check .
-```
-
-## 📈 Key Results
-
-See [docs/results.md](docs/results.md) for the full comparison tables: every reduction ×
-clustering combination, all four anomaly detectors, per-attack-category detection rates, and
-cross-method consensus analysis. Headline numbers below come from the actual run this repository
-ships with.
-
-<!-- RESULTS_SUMMARY_START -->
-| Method | Regime | ROC-AUC | PR-AUC |
-|---|---|---|---|
-| Isolation Forest | unsupervised | 0.879 | 0.859 |
-| **One-Class SVM** | semi-supervised | **0.968** | **0.958** |
-| Deep SVDD | semi-supervised | 0.948 | 0.940 |
-| Autoencoder reconstruction | semi-supervised | 0.961 | 0.947 |
-
-**Every semi-supervised detector beats the fully-unsupervised Isolation Forest by a wide margin.**
-On NSL-KDD, a curated attack-free training window is worth more than any within-method
-hyperparameter choice, a real, actionable answer, not a foregone conclusion (see
-[docs/results.md](docs/results.md#anomaly-detection-head-to-head)).
-
-For clustering, the autoencoder embedding + HDBSCAN gives the best agreement with attack
-categories (ARI 0.354, NMI 0.484) of all nine reduction × clustering combinations tested. Across
-every detector, **R2L is the shared blind spot**: 77.3% of R2L attacks are missed by all four
-independently trained detectors at once, strong evidence the limitation sits in the feature
-representation, not in any one model's capacity, while the rarest category, U2R (n=67), is
-detected best by every method (58-64%). Full tables, per-category breakdowns and the cross-method
-consensus analysis: [docs/results.md](docs/results.md).
-<!-- RESULTS_SUMMARY_END -->
-
-## 🔑 Key Engineering Decisions
-
-- **NSL-KDD over CICIDS2017.** CICIDS2017, the more modern and higher-fidelity choice, was
-  evaluated first, but its official host gates the download behind a form requiring name, email,
-  organization and country. Submitting personal data to a third-party site for a portfolio
-  project wasn't worth it. NSL-KDD is a well-established, non-trivial alternative distributed
-  without any access gate, and its test split's held-out novel attack types are actually a good
-  fit for testing unsupervised generalization anyway.
-- **`log1p` before scaling, not scaling alone.** NSL-KDD's byte/count columns span orders of
-  magnitude, so standardizing them raw still leaves outlier-heavy tails that dominate every
-  Euclidean-distance method (KMeans, UMAP, RBF-kernel SVM). `log1p` first, then scale, applied
-  only to the skewed count/byte columns, not to already-bounded rate features or flags (see
-  `src/ids_anomaly/data/preprocess.py`).
-- **Two training regimes, compared explicitly, not blended.** KMeans, GMM, HDBSCAN and Isolation
-  Forest fit on the full unlabeled, attack-contaminated training data, the only regime that
-  matches production. One-Class SVM, Deep SVDD and the autoencoder fit on a normal-only subset,
-  the classical one-class regime those methods were designed for. Both are scored on the same
-  test split, so the comparison is honest about which assumption each method depends on.
-- **Bias-free Deep SVDD, not a naive implementation.** Following Ruff et al. (2018) exactly:
-  bias-free linear layers plus L2 weight decay to block the trivial "collapse to a constant"
-  solution, with the encoder pretrained as a bias-free autoencoder first. A naive Deep SVDD
-  implementation without these safeguards routinely collapses during training.
-- **Parallelized Optuna HPO after profiling, not upfront.** The first full run showed UMAP HPO
-  taking minutes per trial, single-threaded, on a 16-core machine sitting mostly idle. Every
-  objective's inner work (BLAS, numba-jitted UMAP, PyTorch) releases the GIL, so switching to
-  threaded Optuna trials, with per-trial estimators pinned to `n_jobs=1` to avoid nested
-  oversubscription, gave a large real speedup, documented in `src/ids_anomaly/pipeline.py` rather
-  than silently reverted to serial.
-- **A hand-rolled 3D rotation instead of a Three.js dependency.** Bokeh has no native 3D scatter.
-  Rather than pull in a Three.js/WebGL extension (a build step, a Node.js dependency, more
-  failure surface for a single-file `bokeh serve` app), rotation is a plain orthographic
-  projection with a depth-based size/alpha cue, computed in about 30 lines of `CustomJS` shared
-  with an equivalent NumPy implementation for the initial server-side render (see
-  `dashboard/projection.py`). No build step, no extra runtime dependency, still genuinely
-  interactive.
-- **HDBSCAN's "all noise" result on a single blob is not a bug.** Confirmed against
-  scikit-learn's own `HDBSCAN` implementation while writing tests: a single, unimodal Gaussian
-  blob has no density valley for stability-based cluster selection to split on. Documented in
-  `tests/test_clustering.py` rather than "fixed" by quietly picking different test data.
-- **A Bokeh `Theme` targeting `"Figure"` silently does nothing.** `bokeh.plotting.figure()`
-  actually returns an instance of the lowercase `figure` class, a subclass of `Plot`; theme
-  lookups match by exact class name, so every figure kept its default white background until the
-  theme key was changed to `"Plot"`. Caught by comparing `type(fig).__mro__` in a throwaway
-  script rather than assuming the public API name was the real one, see `dashboard/theme.py`.
-
-## 📂 Project Structure
+## Repository map
 
 ```
-unsupervised-anomaly-network-intrusion/
-├── src/ids_anomaly/
-│   ├── data/            # download, schema, label-blind preprocessing
-│   ├── reduction/         # PCA, UMAP, t-SNE, autoencoder
-│   ├── clustering/         # KMeans, GMM, HDBSCAN
-│   ├── anomaly/             # Isolation Forest, One-Class SVM, Deep SVDD
-│   ├── evaluation/           # metrics, cross-method error analysis
-│   ├── hpo/                   # Optuna search spaces
-│   ├── pipeline.py              # orchestrates the full run
-│   └── cli.py                    # `python -m ids_anomaly.cli run`
-├── dashboard/            # Bokeh server app (3D explorer + anomaly table)
-├── notebooks/              # exploration + docs/ figure generation only
-├── tests/                    # pytest, network-free (synthetic fixture)
-├── docs/                        # methodology, architecture, results, limitations
-└── .github/workflows/ci.yml       # ruff + pytest on every push
+src/ids_anomaly/
+  data/         verified downloads, loaders, harmonized UNSW↔CIC view
+  detectors/    15 detectors + Consensus-Trimmed Refit
+  protocol/     regimes, E1–E4 cells, conformal, metrics, statistics, analysis
+  explain/      exact attributions + deletion-faithfulness test
+  export/       quantized artifacts for the web app
+  api/          optional FastAPI service (same scoring as the browser)
+app/            React 19 + TypeScript + WebGL lab (Vite, Tailwind 4, Playwright)
+paper/          LaTeX manuscript; every number/figure generated from results
+docs/           protocol, datasets, benchmark results, limitations (MkDocs Material)
+tests/          pytest (network-free): 129 tests · app/: vitest + Playwright e2e
+dashboard/      legacy Bokeh dashboard from v0.1 (NSL-KDD)
 ```
 
-See [docs/architecture.md](docs/architecture.md) for the full data-flow diagram.
+## Engineering notes
 
-## 📄 Documentation
+* **Quality gates:** ruff, mypy, pytest on Python 3.10 and 3.12; type-check + vitest + Playwright for the app; MkDocs `--strict`.
+* **Honest limitations** ([docs/limitations.md](docs/limitations.md)): lab-generated datasets with documented issues, fixed hyper-parameters,
+  seeds ≠ dataset replicates, a clean calibration slice is assumed, CTR needs a contamination bound, no adaptive adversaries.
+  TabPFN-style foundation models were evaluated for feasibility and excluded (per-feature conditional prediction is impractical on CPU).
+* **Data quirks handled:** the UNSW-NB15 mirror swaps its `train`/`test` names; CIC-IDS2017 timestamps mix two formats on a 12-hour clock
+  without AM/PM; pandas 3 string columns must never be pickled into score files.
 
-- [docs/problem_statement.md](docs/problem_statement.md): why unsupervised, why this is hard
-- [docs/methodology.md](docs/methodology.md): preprocessing, label usage, splits, every method
-- [docs/architecture.md](docs/architecture.md): data flow, training regimes, dashboard design
-- [docs/experiments.md](docs/experiments.md): exact Optuna search spaces and trial counts
-- [docs/results.md](docs/results.md): full comparison tables and figures
-- [docs/limitations.md](docs/limitations.md): honest limitations and future work
+## Cite
 
-## 🧠 Tech Stack
-
-- **Languages:** Python (NumPy, Pandas, SciPy)
-- **Modeling:** scikit-learn, PyTorch, UMAP, HDBSCAN
-- **Hyperparameter optimization:** Optuna
-- **Dashboard:** Bokeh server
-- **Quality:** pytest, ruff, GitHub Actions CI
-- **Dataset:** NSL-KDD (Tavallaee et al., 2009)
-
-## 📜 License
-
-MIT, see [LICENSE](LICENSE).
-
----
+```bibtex
+@misc{gomezpulido2026noctua,
+  title  = {Noctua: Unsupervised Network Intrusion Detection under Training Contamination, Temporal Drift and Dataset Shift},
+  author = {Gómez Pulido, Francisco Javier},
+  year   = {2026},
+  url    = {https://github.com/fragompul/unsupervised-anomaly-network-intrusion}
+}
+```
 
 ## 👤 Author
 
-**Francisco Javier Gómez Pulido**
-AI Lead at Aapex. AI Lead & MLOps Architect specialized in building scalable architectures, data
-science pipelines, and generating real business impact through production-grade artificial
-intelligence. Holds a Double Degree in Mathematics and Computer Science and a Master's degree in
-Artificial Intelligence.
+**Francisco Javier Gómez Pulido** — AI Lead at Aapex. AI Lead & MLOps Architect specialized in building scalable architectures,
+data science pipelines, and generating real business impact through production-grade artificial intelligence. Double Degree in
+Mathematics and Computer Science; Master's in Artificial Intelligence.
 
-📫 **Let's connect:**
-* **LinkedIn:** [linkedin.com/in/frangomezpulido](https://www.linkedin.com/in/frangomezpulido)
-* **GitHub:** [github.com/fragompul](https://github.com/fragompul)
-* **Email:** [frangomezpulido2002@gmail.com](mailto:frangomezpulido2002@gmail.com)
+📫 [LinkedIn](https://www.linkedin.com/in/frangomezpulido) · [GitHub](https://github.com/fragompul) · [Email](mailto:frangomezpulido2002@gmail.com)
+
+MIT License — see [LICENSE](LICENSE).
