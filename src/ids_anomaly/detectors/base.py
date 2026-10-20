@@ -9,6 +9,7 @@ log-likelihood interchangeably.
 from __future__ import annotations
 
 import copy
+import os
 import random
 import time
 from abc import ABC, abstractmethod
@@ -19,7 +20,8 @@ import numpy as np
 import torch
 from torch import nn
 
-TORCH_THREADS = 4  # leave cores free: the benchmark runner parallelizes across detectors/seeds
+# Leave cores free: the benchmark runner parallelizes across cells, not inside torch.
+TORCH_THREADS = int(os.environ.get("NOCTUA_TORCH_THREADS", "4"))
 
 
 def seed_everything(seed: int) -> None:

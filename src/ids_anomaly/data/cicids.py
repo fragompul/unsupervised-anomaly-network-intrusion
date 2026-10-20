@@ -145,3 +145,24 @@ def load_cicids(
         )
 
     return _ds(train_df, X_train), _ds(test_df, X_test), pre
+
+
+def load_cicids_by_day(
+    raw_dir: Path, monday_cap: int = 100_000, day_cap: int = 60_000, seed: int = 42
+) -> tuple[pd.DataFrame, dict[str, pd.DataFrame], list[str]]:
+    """Monday (attack-free) as the training window and each later day as its own frame.
+
+    Used by the drift experiment: a model fit on Monday's benign traffic is evaluated, with a
+    threshold fixed on Monday, on Tue/Wed/Thu/Fri. Every frame is class-aware subsampled.
+    """
+    rng = np.random.default_rng(seed)
+    df = _load_frame(raw_dir)
+    numeric = [c for c in df.columns if c not in ("timestamp", "day", "category", "label", "protocol")]
+
+    def _cap(part: pd.DataFrame, cap: int) -> pd.DataFrame:
+        part = part.reset_index(drop=True)
+        return part.iloc[stratified_cap(part["category"].to_numpy(), cap, rng)].reset_index(drop=True)
+
+    monday = _cap(df[df["day"] == "Mon"], monday_cap)
+    days = {d: _cap(df[df["day"] == d], day_cap) for d in ("Tue", "Wed", "Thu", "Fri")}
+    return monday, days, numeric
